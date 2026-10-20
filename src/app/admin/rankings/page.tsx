@@ -11,7 +11,7 @@ import { date, pct } from "@/modules/format";
 export const metadata: Metadata = { title: "Rankings" };
 
 type P = { org_id: string; period_end: string; submitted: number; qualified: number; qualification_rate: number | null; last_30: number; score: number | null; level: string; organizations: { name: string } | null };
-type V = { org_id: string; period_end: string; received: number; acceptance_rate: number | null; avg_response_minutes: number | null; update_rate: number | null; score: number | null; level: string; organizations: { name: string } | null };
+type V = { org_id: string; period_end: string; received: number; acceptance_rate: number | null; avg_response_minutes: number | null; update_rate: number | null; outcome_rate: number | null; score: number | null; level: string; organizations: { name: string } | null };
 
 function latest<T extends { period_end: string }>(rows: T[]) {
   const max = rows.reduce((m, r) => (r.period_end > m ? r.period_end : m), "");
@@ -64,7 +64,7 @@ export default async function RankingsPage({ searchParams }: { searchParams: Pro
       {!providers.length ? (
         <EmptyState title="No provider scores yet" />
       ) : (
-        <Table head={["#", "Provider", "Score", "Level", "Received", "Acceptance", "Avg. response", "Updates"]}>
+        <Table head={["#", "Provider", "Score", "Level", "Received", "Acceptance", "Median response", "First contact 48h", "Showed up"]}>
           {providers.map((r, i) => (
             <tr key={r.org_id}>
               <Td className="tabular-nums text-muted">{r.score === null ? "—" : i + 1}</Td>
@@ -75,6 +75,7 @@ export default async function RankingsPage({ searchParams }: { searchParams: Pro
               <Td>{pct(r.acceptance_rate)}</Td>
               <Td>{r.avg_response_minutes != null ? `${Math.round(Number(r.avg_response_minutes) / 60)}h` : "—"}</Td>
               <Td>{pct(r.update_rate)}</Td>
+              <Td>{pct(r.outcome_rate)}</Td>
             </tr>
           ))}
         </Table>

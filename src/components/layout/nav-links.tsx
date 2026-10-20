@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 type LinkItem = { href: string; label: string; icon: React.ReactNode };
 
 function isActive(path: string, href: string) {
-  return href === "/app" || href === "/admin" ? path === href : path === href || path.startsWith(href + "/");
+  return ["/partner", "/provider", "/admin"].includes(href) ? path === href : path === href || path.startsWith(href + "/");
 }
 
 export function NavLinks({ links, onNavigate }: { links: LinkItem[]; onNavigate?: () => void }) {

@@ -1,6 +1,6 @@
 "use server";
 
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -25,7 +25,15 @@ const projectSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email.").max(254).or(z.literal("")).transform((v) => v || null),
 });
 
-const keys = ["category", "city", "zip", "description", "timeline", "name", "phone", "email", "address", "provider"];
+const keys = ["category", "city", "zip", "description", "timeline", "budget", "propertyType", "needs", "name", "phone", "email", "address", "provider"];
+const budgets = ["under_5k", "5k_15k", "15k_30k", "30k_60k", "60k_plus", "unknown"] as const;
+const properties = ["single_family", "townhouse", "condo", "multi_family", "commercial", "other"] as const;
+const scope = {
+  budget: z.enum(budgets, { error: "Choose the estimated budget." }),
+  propertyType: z.enum(properties).optional(),
+  needs: z.string().trim().max(2000).optional(),
+};
+const photoTypes: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/heic": "heic" };
 const fieldsOf = (fd: FormData) => Object.fromEntries(keys.map((k) => [k, String(fd.get(k) ?? "")]));
 
 const friendly = (code: string | undefined, message: string, fallback: string) =>
@@ -39,25 +47,35 @@ export async function submitReferral(_: FormState, formData: FormData): Promise<
       address: z.string().trim().max(300).optional(),
       provider: z.string().uuid().optional(),
       attested: z.literal("on", { error: "Confirm the homeowner authorized you to share their details." }),
+      ...scope,
     })
     .safeParse({
       ...fields,
       orgId: formData.get("orgId"),
       provider: fields.provider || undefined,
+      propertyType: fields.propertyType || undefined,
+      needs: fields.needs || undefined,
       attested: formData.get("attested"),
     });
   if (!parsed.success) return { error: parsed.error.issues[0].message, fields };
   const d = parsed.data;
   if (!d.phone && !d.email) return { error: "Add the homeowner's phone or email.", fields };
+  const photos = formData.getAll("photos").filter((f): f is File => f instanceof File && f.size > 0);
+  if (photos.length > 8) return { error: "Add up to 8 photos.", fields };
+  if (photos.some((p) => !photoTypes[p.type])) return { error: "Photos must be JPG, PNG, WEBP or HEIC.", fields };
+  if (photos.some((p) => p.size > 8 * 1024 * 1024)) return { error: "Each photo must be 8 MB or smaller.", fields };
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("submit_referral", {
+  const { data: referralId, error } = await supabase.rpc("submit_referral_v2", {
     p_org: d.orgId,
     p_category: d.category,
     p_city: d.city,
     p_zip: d.zip,
     p_description: d.description,
     p_timeline: d.timeline,
+    p_budget: d.budget,
+    p_property_type: d.propertyType ?? null,
+    p_needs: d.needs ?? null,
     p_name: d.name,
     p_phone: d.phone,
     p_email: d.email,
@@ -66,8 +84,15 @@ export async function submitReferral(_: FormState, formData: FormData): Promise<
     p_suggested_provider: d.provider ?? null,
   });
   if (error) return { error: friendly(error.code, error.message, "We could not send the referral. Try again."), fields };
-  revalidatePath("/app", "layout");
-  redirect("/app/referrals?sent=1");
+  let failed = 0;
+  for (const photo of photos) {
+    const path = `${referralId}/${randomUUID()}.${photoTypes[photo.type]}`;
+    const { error: up } = await supabase.storage.from("referral-photos").upload(path, photo, { contentType: photo.type });
+    const { error: row } = up ? { error: up } : await supabase.from("referral_photos").insert({ referral_id: referralId, path });
+    if (row) failed += 1;
+  }
+  revalidatePath("/", "layout");
+  redirect(`/partner/referrals?sent=1${failed ? `&photos_failed=${failed}` : ""}`);
 }
 
 export async function submitPublicReferral(_: FormState, formData: FormData): Promise<FormState> {
@@ -78,8 +103,16 @@ export async function submitPublicReferral(_: FormState, formData: FormData): Pr
       code: z.string().regex(/^[a-z0-9]{6,16}$/),
       consentVersion: z.string().min(1).max(40),
       consent: z.literal("on", { error: "Please authorize BookedUp to contact you about this project." }),
+      ...scope,
     })
-    .safeParse({ ...fields, code: formData.get("code"), consentVersion: formData.get("consentVersion"), consent: formData.get("consent") });
+    .safeParse({
+      ...fields,
+      propertyType: fields.propertyType || undefined,
+      needs: fields.needs || undefined,
+      code: formData.get("code"),
+      consentVersion: formData.get("consentVersion"),
+      consent: formData.get("consent"),
+    });
   if (!parsed.success) return { error: parsed.error.issues[0].message, fields };
   const d = parsed.data;
   if (!d.phone && !d.email) return { error: "Add a phone number or email so we can reach you.", fields };
@@ -89,13 +122,16 @@ export async function submitPublicReferral(_: FormState, formData: FormData): Pr
   const ipHash = createHash("sha256").update(`bookedup:${ip}`).digest("hex").slice(0, 32);
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("submit_public_referral", {
+  const { data, error } = await supabase.rpc("submit_public_referral_v2", {
     p_code: d.code,
     p_category: d.category,
     p_city: d.city,
     p_zip: d.zip,
     p_description: d.description,
     p_timeline: d.timeline,
+    p_budget: d.budget,
+    p_property_type: d.propertyType ?? null,
+    p_needs: d.needs ?? null,
     p_name: d.name,
     p_phone: d.phone,
     p_email: d.email,
@@ -118,9 +154,9 @@ export async function respondOpportunity(formData: FormData) {
   const reason = z.enum(["not_a_fit", "no_capacity", "outside_area", "other"]).catch("other").parse(formData.get("reason"));
   const supabase = await createClient();
   const { error } = await supabase.rpc("provider_respond", { p_assignment: a, p_accept: accept, p_reason: accept ? null : reason });
-  if (error) redirect(`/app/opportunities/${a}?error=${encodeURIComponent(error.message)}`);
-  revalidatePath("/app/opportunities", "layout");
-  redirect(`/app/opportunities/${a}`);
+  if (error) redirect(`/provider/opportunities/${a}?error=${encodeURIComponent(error.message)}`);
+  revalidatePath("/provider/opportunities", "layout");
+  redirect(`/provider/opportunities/${a}`);
 }
 
 export async function updateOpportunity(formData: FormData) {
@@ -129,11 +165,49 @@ export async function updateOpportunity(formData: FormData) {
   const raw = String(formData.get("value") ?? "").replace(/[^0-9.]/g, "");
   const value = raw ? Number(raw) : null;
   const notes = String(formData.get("notes") ?? "").trim().slice(0, 4000) || null;
+  const when = String(formData.get("appointment") ?? "");
+  // datetime-local is entered in Orlando time (Eastern).
+  const appointment = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(when) ? easternToIso(when) : null;
   const supabase = await createClient();
-  const { error } = await supabase.rpc("provider_update", { p_assignment: a, p_status: status, p_estimated_value: value, p_notes: notes });
-  if (error) redirect(`/app/opportunities/${a}?error=${encodeURIComponent(error.message)}`);
-  revalidatePath("/app/opportunities", "layout");
-  redirect(`/app/opportunities/${a}?saved=1`);
+  const { error } = await supabase.rpc("provider_update_v2", {
+    p_assignment: a,
+    p_status: status,
+    p_estimated_value: value,
+    p_notes: notes,
+    p_appointment_at: appointment,
+  });
+  if (error) redirect(`/provider/opportunities/${a}?error=${encodeURIComponent(error.message)}`);
+  revalidatePath("/provider/opportunities", "layout");
+  redirect(`/provider/opportunities/${a}?saved=1`);
+}
+
+function easternToIso(local: string) {
+  // Find the UTC offset of America/New_York at that moment (handles daylight saving).
+  const guess = new Date(local + ":00Z");
+  const tz = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", timeZoneName: "shortOffset" })
+    .formatToParts(guess)
+    .find((p) => p.type === "timeZoneName")?.value ?? "GMT-5";
+  const hours = Number(tz.replace("GMT", "") || "-5");
+  return new Date(guess.getTime() - hours * 3600 * 1000).toISOString();
+}
+
+/* ---------------------------------------------------------------- partner feedback on the provider */
+
+export async function sendPartnerFeedback(formData: FormData) {
+  const r = id.parse(formData.get("referralId"));
+  const yn = (k: string) => (formData.get(k) === "yes" ? true : formData.get(k) === "no" ? false : null);
+  const rating = Number(formData.get("rating"));
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("partner_feedback", {
+    p_referral: r,
+    p_contacted: yn("contacted"),
+    p_showed: yn("showed"),
+    p_kept: yn("kept"),
+    p_rating: rating >= 1 && rating <= 5 ? rating : null,
+    p_comment: String(formData.get("comment") ?? "").slice(0, 1000) || null,
+  });
+  revalidatePath("/partner/referrals");
+  redirect(`/partner/referrals?${error ? "error=" + encodeURIComponent(error.message) : "feedback=1"}`);
 }
 
 /* ---------------------------------------------------------------- connections and notifications */
@@ -143,7 +217,7 @@ export async function requestConnection(formData: FormData) {
   const to = id.parse(formData.get("to"));
   const supabase = await createClient();
   await supabase.rpc("request_connection", { p_from: from, p_to: to });
-  revalidatePath("/app/partners");
+  revalidatePath("/partner/network");
 }
 
 export async function respondConnection(formData: FormData) {
@@ -151,12 +225,12 @@ export async function respondConnection(formData: FormData) {
   const status = z.enum(["accepted", "declined"]).parse(formData.get("status"));
   const supabase = await createClient();
   await supabase.rpc("respond_connection", { p_connection: c, p_status: status });
-  revalidatePath("/app/partners");
+  revalidatePath("/partner/network");
 }
 
 export async function markNotificationsRead() {
   const supabase = await createClient();
   await supabase.from("notifications").update({ read_at: new Date().toISOString() }).is("read_at", null);
-  revalidatePath("/app", "layout");
+  revalidatePath("/", "layout");
   revalidatePath("/admin", "layout");
 }

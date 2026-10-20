@@ -58,12 +58,13 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             <Num name="pw_reliability" label="No duplicates" value={pw.reliability} />
           </div>
           <h2 className="pt-2 font-semibold">Provider score weights</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-            <Num name="vw_response" label="Response time" value={vw.response} />
-            <Num name="vw_acceptance" label="Acceptance" value={vw.acceptance} />
-            <Num name="vw_updates" label="Updates" value={vw.updates} />
-            <Num name="vw_feedback" label="Outcome feedback" value={vw.feedback} />
-            <Num name="vw_reliability" label="Reliability" value={vw.reliability} />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <Num name="vw_response" label="Response time" value={vw.response ?? 25} />
+            <Num name="vw_acceptance" label="Acceptance" value={vw.acceptance ?? 15} />
+            <Num name="vw_first_contact" label="First contact within 48h" value={vw.first_contact ?? 15} />
+            <Num name="vw_attendance" label="Showed up (verified)" value={vw.attendance ?? 20} />
+            <Num name="vw_commitments" label="Kept commitments (verified)" value={vw.commitments ?? 15} />
+            <Num name="vw_rating" label="Verified rating" value={vw.rating ?? 10} />
           </div>
           <h2 className="pt-2 font-semibold">Thresholds</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

@@ -33,7 +33,7 @@ export function DirectoryCard({ d, href, children }: { d: DirectoryRow; href?: s
           )}
           {d.verified ? (
             <Badge tone="purple" className="gap-1">
-              <BadgeCheck aria-hidden className="size-3" /> Verified
+              <BadgeCheck aria-hidden className="size-3" /> Verified documents
             </Badge>
           ) : null}
         </div>

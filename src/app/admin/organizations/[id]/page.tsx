@@ -9,8 +9,10 @@ import { Flash } from "@/components/ui/flash";
 import { Field, Input } from "@/components/ui/form";
 import { Checkbox, Select, Textarea } from "@/components/ui/inputs";
 import { createClient } from "@/lib/supabase/server";
-import { saveFollowup, updateOrganizationAdmin } from "@/modules/admin/actions";
-import { date, dateTime, toneFor } from "@/modules/format";
+import { reviewDocument, saveFollowup, updateOrganizationAdmin } from "@/modules/admin/actions";
+import { ReliabilityView, type Reliability } from "@/modules/provider/reliability-view";
+import { docKindLabel } from "@/modules/provider/labels";
+import { date, dateTime, money, toneFor } from "@/modules/format";
 
 export const metadata: Metadata = { title: "Organization" };
 
@@ -49,6 +51,19 @@ export default async function OrganizationAdminPage({
     ]);
 
   const caps = (org.organization_capabilities ?? []) as { capability: string; status: string }[];
+  const isProvider = caps.some((c) => c.capability === "receive");
+  type Doc = { id: string; kind: string; number: string | null; issuer: string | null; expires_on: string | null; status: string; file_path: string | null; review_note: string | null };
+  const [{ data: capacity }, { data: docRows }, { data: rel }] = isProvider
+    ? await Promise.all([
+        supabase.from("provider_capacity").select("*").eq("org_id", id).maybeSingle(),
+        supabase.from("professional_documents").select("id, kind, number, issuer, expires_on, status, file_path, review_note").eq("org_id", id).order("created_at", { ascending: false }),
+        supabase.rpc("provider_reliability", { p_org: id }),
+      ])
+    : [{ data: null }, { data: [] }, { data: null }];
+  const docs = (docRows ?? []) as Doc[];
+  const paths = docs.map((d) => d.file_path).filter((p): p is string => Boolean(p));
+  const { data: signedDocs } = paths.length ? await supabase.storage.from("provider-docs").createSignedUrls(paths, 3600) : { data: [] };
+  const docUrl = new Map((signedDocs ?? []).map((x) => [x.path, x.signedUrl]));
   const cap = (c: string) => caps.find((x) => x.capability === c);
   const fu = (Array.isArray(org.organization_followups) ? org.organization_followups[0] : org.organization_followups) as {
     last_contact_at: string | null;
@@ -70,7 +85,6 @@ export default async function OrganizationAdminPage({
       <div className="flex flex-wrap gap-2">
         <Badge tone={toneFor(org.status)}>{org.status.replace("_", " ")}</Badge>
         <Badge tone={toneFor(String(activation))}>Activation: {String(activation ?? "—")}</Badge>
-        {org.verification === "verified" ? <Badge tone="purple">Verified</Badge> : null}
         {r.partner ? <Badge>{r.partner.score === null ? "Partner: not enough data" : `${r.partner.level} · ${r.partner.score}`}</Badge> : null}
         {r.provider ? <Badge>{r.provider.score === null ? "Provider: not enough data" : `${r.provider.level} · ${r.provider.score}`}</Badge> : null}
       </div>
@@ -82,6 +96,10 @@ export default async function OrganizationAdminPage({
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="grid content-start gap-3 text-sm">
+          <p className="flex flex-wrap gap-1">
+            {cap("refer") ? <Badge tone="purple">Partner / anchor</Badge> : null}
+            {cap("receive") ? <Badge tone="purple">Provider</Badge> : null}
+          </p>
           <h2 className="text-base font-semibold">Contact</h2>
           <p>{org.email ?? "—"}</p>
           <p>{org.phone ?? "—"}</p>
@@ -116,7 +134,7 @@ export default async function OrganizationAdminPage({
             <form action={updateOrganizationAdmin} className="grid gap-3">
               <h2 className="font-semibold">Access</h2>
               <input type="hidden" name="orgId" value={org.id} />
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3">
                 <Field id="status" label="Status">
                   <Select id="status" name="status" defaultValue={org.status}>
                     <option value="pending_review">Pending review</option>
@@ -125,18 +143,11 @@ export default async function OrganizationAdminPage({
                     <option value="rejected">Rejected</option>
                   </Select>
                 </Field>
-                <Field id="verification" label="Verification">
-                  <Select id="verification" name="verification" defaultValue={org.verification}>
-                    <option value="not_verified">Not verified</option>
-                    <option value="pending">Pending</option>
-                    <option value="verified">Verified</option>
-                    <option value="expired">Expired</option>
-                  </Select>
-                </Field>
+
               </div>
               <div className="flex flex-wrap gap-4">
-                <Checkbox name="refer" defaultChecked={cap("refer")?.status === "approved"} label={`Can refer${cap("refer") ? ` (${cap("refer")!.status})` : ""}`} />
-                <Checkbox name="receive" defaultChecked={cap("receive")?.status === "approved"} label={`Can receive${cap("receive") ? ` (${cap("receive")!.status})` : ""}`} />
+                <Checkbox name="refer" defaultChecked={cap("refer")?.status === "approved"} label={`Partner / anchor: can refer${cap("refer") ? ` (${cap("refer")!.status})` : ""}`} />
+                <Checkbox name="receive" defaultChecked={cap("receive")?.status === "approved"} label={`Provider: can receive${cap("receive") ? ` (${cap("receive")!.status})` : ""}`} />
               </div>
               <Input name="note" maxLength={500} placeholder="Internal note (optional)" aria-label="Internal note" />
               <Button size="sm" className="justify-self-start">Save access</Button>
@@ -164,6 +175,57 @@ export default async function OrganizationAdminPage({
           </Card>
         </div>
       </div>
+      {isProvider ? (
+        <section className="grid gap-4">
+          <h2 className="text-xl font-semibold">Provider: capacity, documents and reliability</h2>
+          <Card className="grid gap-2 text-sm">
+            <h3 className="text-base font-semibold">Operational capacity</h3>
+            {capacity ? (
+              <>
+                <p>
+                  {capacity.accepting_new_work ? "Taking new projects" : "Paused"} · {capacity.weekly_capacity ?? "—"} per week · starts in{" "}
+                  {capacity.lead_time_days ?? "—"} days
+                </p>
+                <p>
+                  Project size: {money(capacity.min_project_value)} – {money(capacity.max_project_value)}
+                </p>
+                {capacity.notes ? <p className="text-muted">{capacity.notes}</p> : null}
+                <p className="text-muted">Last confirmed {dateTime(capacity.confirmed_at)}</p>
+              </>
+            ) : (
+              <p className="text-muted">The provider has not informed capacity yet.</p>
+            )}
+          </Card>
+          <Card className="grid gap-3 text-sm">
+            <h3 className="text-base font-semibold">Professional documents</h3>
+            {!docs.length ? <p className="text-muted">No documents uploaded.</p> : null}
+            {docs.map((d) => (
+              <form key={d.id} action={reviewDocument} className="grid gap-2 rounded-lg border border-border p-3">
+                <input type="hidden" name="docId" value={d.id} />
+                <input type="hidden" name="orgId" value={org.id} />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span>
+                    <span className="font-medium">{docKindLabel[d.kind]}</span>
+                    <span className="text-muted"> · {[d.number, d.issuer, d.expires_on ? `expires ${date(d.expires_on)}` : "no expiration"].filter(Boolean).join(" · ")}</span>
+                  </span>
+                  <Badge tone={d.status === "verified" ? "success" : d.status === "rejected" ? "danger" : "warning"}>{d.status === "submitted" ? "to review" : d.status}</Badge>
+                </div>
+                {d.file_path && docUrl.get(d.file_path) ? (
+                  <a href={docUrl.get(d.file_path)!} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Open file</a>
+                ) : (
+                  <span className="text-muted">No file attached — check the number with the issuer.</span>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <Input name="note" placeholder="Review note (optional)" aria-label="Review note" maxLength={500} defaultValue={d.review_note ?? ""} className="h-9 min-w-48 flex-1" />
+                  <Button size="sm" name="status" value="verified">Verify</Button>
+                  <Button size="sm" variant="secondary" name="status" value="rejected">Reject</Button>
+                </div>
+              </form>
+            ))}
+          </Card>
+          {rel ? <ReliabilityView r={rel as Reliability} /> : null}
+        </section>
+      ) : null}
     </>
   );
 }

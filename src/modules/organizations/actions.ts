@@ -69,7 +69,7 @@ export async function createOrganization(_: FormState, formData: FormData): Prom
     if (error.code === "54000") return { error: "This account already owns the maximum number of businesses.", fields };
     return { error: "We could not save the business. Check the details and try again.", fields };
   }
-  revalidatePath("/app", "layout");
+  revalidatePath("/", "layout");
   redirect("/app?created=1");
 }
 
@@ -104,7 +104,7 @@ export async function saveServices(_: FormState, formData: FormData): Promise<Fo
       .eq("id", org),
   ];
   if (steps.some((s) => s.error)) return { error: "You don't have permission to change this business." };
-  revalidatePath("/app", "layout");
+  revalidatePath("/", "layout");
   return { success: "Services and service areas saved." };
 }
 
@@ -120,7 +120,7 @@ export async function addTeamMember(_: FormState, formData: FormData): Promise<F
   const supabase = await createClient();
   const { error } = await supabase.rpc("add_member_by_email", { p_org: parsed.data.orgId, p_email: parsed.data.email, p_role: parsed.data.role });
   if (error) return { error: error.code === "P0002" ? error.message : "Only owners and managers can add team members." };
-  revalidatePath("/app/business");
+  revalidatePath("/", "layout");
   return { success: "Team member added." };
 }
 
@@ -147,6 +147,6 @@ export async function updateOrganization(_: FormState, formData: FormData): Prom
     .eq("id", orgId.data)
     .select("id");
   if (error || !data?.length) return { error: "You don't have permission to edit this business, or it no longer exists.", fields };
-  revalidatePath("/app", "layout");
+  revalidatePath("/", "layout");
   return { success: "Business profile saved." };
 }

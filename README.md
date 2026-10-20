@@ -17,6 +17,18 @@ B2B platform for the BookedUp network of home-service businesses in Orlando–Ki
 | 6 · Growth | Growth contracts (target in 90 days), automatic delivery counting, delivery audit, offer text gated by approval | Done |
 | 7 · Billing | Tables only (plans, subscriptions, entitlements, usage limits, billing events). No checkout. | Schema only |
 
+## Three environments
+
+| Area | Path | Who | Main jobs |
+|---|---|---|---|
+| Partner (anchor) | `/partner` | Businesses that refer | Profile, services, cities, send full-scope referrals (photos, budget, needs), referral link, status, feedback on providers, ranking |
+| Provider | `/provider` | Businesses that receive | Opportunities (accept/decline, pipeline, appointment), operational capacity, documents, reliability history |
+| BookedUp Admin | `/admin` | Platform admins | Approvals, partners, providers, document review, referrals, matching, verified feedback, Growth, rankings, coverage, reports, settings |
+
+After login, `/app` sends each account to its own area. Accounts with more than one area get a switcher in the sidebar.
+
+Rules that keep this from becoming an open marketplace: providers never browse projects; BookedUp sends each qualified project to one provider at a time. Address and homeowner contact stay hidden until authorization is confirmed and the provider accepts. Badges are earned: "Verified documents" needs a valid license and insurance checked by BookedUp; "Trusted Provider" also needs 5 accepted opportunities, 3 verified feedbacks (avg ≥ 4, showed up ≥ 90%) and no stalled projects.
+
 ## Run locally
 
 ```bash
@@ -59,6 +71,7 @@ After that, super admins promote other admins with `super_admin_set_platform_rol
 ```bash
 psql "$DATABASE_URL" -f supabase/tests/rls_foundation.sql    # cross-access tests, rolls back, expects "ALL PASSED"
 psql "$DATABASE_URL" -f supabase/tests/flow_end_to_end.sql   # signup → approval → referral → consent → qualify → match → accept → pipeline → Growth → scores
+psql "$DATABASE_URL" -f supabase/tests/flow_capacity_reliability.sql  # capacity, documents, full-scope request, photos, verified feedback, earned badge
 ```
 
 Both suites pass against the production database (run inside a transaction and rolled back).

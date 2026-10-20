@@ -65,11 +65,9 @@ export async function updateOrganizationAdmin(formData: FormData) {
   const org = uuid.parse(formData.get("orgId"));
   const path = `/admin/organizations/${org}`;
   const status = z.enum(["pending_review", "approved", "suspended", "rejected"]).parse(formData.get("status"));
-  const verification = z.enum(["not_verified", "pending", "verified", "expired"]).parse(formData.get("verification"));
   const note = String(formData.get("note") ?? "").trim().slice(0, 500) || null;
   const steps = [
     await call("admin_set_org_status", { p_org: org, p_status: status, p_note: note }),
-    await call("admin_set_verification", { p_org: org, p_status: verification }),
     await call("admin_set_capability", { p_org: org, p_cap: "refer", p_status: formData.get("refer") === "on" ? "approved" : "revoked" }),
     await call("admin_set_capability", { p_org: org, p_cap: "receive", p_status: formData.get("receive") === "on" ? "approved" : "revoked" }),
   ];
@@ -232,11 +230,12 @@ export async function saveSettings(formData: FormData) {
     .update({
       partner_weights: { volume: n("pw_volume", 40), rate: n("pw_rate", 30), consistency: n("pw_consistency", 20), reliability: n("pw_reliability", 10) },
       provider_weights: {
-        response: n("vw_response", 30),
-        acceptance: n("vw_acceptance", 25),
-        updates: n("vw_updates", 20),
-        feedback: n("vw_feedback", 15),
-        reliability: n("vw_reliability", 10),
+        response: n("vw_response", 25),
+        acceptance: n("vw_acceptance", 15),
+        first_contact: n("vw_first_contact", 15),
+        attendance: n("vw_attendance", 20),
+        commitments: n("vw_commitments", 15),
+        rating: n("vw_rating", 10),
       },
       partner_min_volume: n("partner_min_volume", 3),
       provider_min_volume: n("provider_min_volume", 3),
@@ -249,4 +248,48 @@ export async function saveSettings(formData: FormData) {
     .eq("network_id", current!.network_id);
   revalidatePath("/admin", "layout");
   redirect(back("/admin/settings", error ? "Could not save settings." : "Settings saved.", !error));
+}
+
+/* ---------------------------------------------------------------- documents and feedback */
+
+export async function reviewDocument(formData: FormData) {
+  await requireAdmin();
+  const doc = uuid.parse(formData.get("docId"));
+  const org = uuid.parse(formData.get("orgId"));
+  const status = z.enum(["verified", "rejected", "submitted"]).parse(formData.get("status"));
+  const { error } = await call("admin_review_document", {
+    p_doc: doc,
+    p_status: status,
+    p_note: String(formData.get("note") ?? "").trim().slice(0, 500) || null,
+  });
+  revalidatePath("/admin", "layout");
+  redirect(back(`/admin/organizations/${org}`, error ? "Could not review the document." : "Document reviewed.", !error));
+}
+
+export async function recordFeedback(formData: FormData) {
+  await requireAdmin();
+  const assignment = uuid.parse(formData.get("assignmentId"));
+  const referral = uuid.parse(formData.get("referralId"));
+  const yn = (k: string) => (formData.get(k) === "yes" ? true : formData.get(k) === "no" ? false : null);
+  const rating = Number(formData.get("rating"));
+  const { error } = await call("admin_record_feedback", {
+    p_assignment: assignment,
+    p_source: z.enum(["homeowner", "partner", "admin"]).catch("homeowner").parse(formData.get("source")),
+    p_contacted: yn("contacted"),
+    p_showed: yn("showed"),
+    p_kept: yn("kept"),
+    p_rating: rating >= 1 && rating <= 5 ? rating : null,
+    p_comment: String(formData.get("comment") ?? "").slice(0, 1000) || null,
+  });
+  revalidatePath("/admin", "layout");
+  redirect(back(`/admin/referrals/${referral}`, error ? "Could not save the feedback." : "Verified feedback saved.", !error));
+}
+
+export async function verifyFeedback(formData: FormData) {
+  await requireAdmin();
+  const fb = uuid.parse(formData.get("feedbackId"));
+  const referral = uuid.parse(formData.get("referralId"));
+  const { error } = await call("admin_verify_feedback", { p_feedback: fb, p_verified: formData.get("verified") === "true" });
+  revalidatePath("/admin", "layout");
+  redirect(back(`/admin/referrals/${referral}`, error ? "Could not update the feedback." : "Feedback updated.", !error));
 }

@@ -2,6 +2,7 @@ import type { Category } from "@/modules/network/catalog";
 import { Field, Input } from "@/components/ui/form";
 import { Select, Textarea } from "@/components/ui/inputs";
 import { timelineLabel } from "@/modules/format";
+import { budgetLabel, propertyLabel } from "@/modules/provider/labels";
 
 type F = Record<string, string | undefined>;
 
@@ -31,8 +32,33 @@ export function ProjectFields({ categories, f, who }: { categories: Category[]; 
           </Select>
         </Field>
       </div>
-      <Field id="description" label="Project description" hint="What needs to be done? Size, materials, anything that helps the provider.">
+      <Field id="description" label="Project description" hint="What needs to be done? Rooms, size, materials.">
         <Textarea id="description" name="description" rows={4} minLength={10} maxLength={3000} required defaultValue={f.description ?? ""} />
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="budget" label="Estimated budget">
+          <Select id="budget" name="budget" defaultValue={f.budget ?? ""}>
+            <option value="">Select</option>
+            {Object.entries(budgetLabel).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field id="propertyType" label="Property type">
+          <Select id="propertyType" name="propertyType" defaultValue={f.propertyType ?? ""}>
+            <option value="">Select</option>
+            {Object.entries(propertyLabel).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </div>
+      <Field id="needs" label="Specific needs (optional)" hint="Accessibility, HOA rules, permits, materials already bought, best time to visit.">
+        <Textarea id="needs" name="needs" rows={2} maxLength={2000} defaultValue={f.needs ?? ""} />
       </Field>
       <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
         <Field id="city" label="Project city">

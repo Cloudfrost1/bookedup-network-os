@@ -43,7 +43,7 @@ export default async function ApprovalsPage() {
               <Card key={o.id} className="grid gap-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="grid gap-0.5">
-                    <p className="font-semibold">{o.name}</p>
+                    <a href={`/admin/organizations/${o.id}`} className="font-semibold text-primary hover:underline">{o.name}</a>
                     <p className="text-sm text-muted">
                       {[o.city, o.state, o.zip].filter(Boolean).join(", ")} · {o.email}
                       {o.phone ? ` · ${o.phone}` : ""}
@@ -51,7 +51,7 @@ export default async function ApprovalsPage() {
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {[...requested].map((c) => (
-                      <Badge key={c} tone="purple">Wants to {c}</Badge>
+                      <Badge key={c} tone="purple">{c === "refer" ? "Partner / anchor (refers)" : "Provider (receives)"}</Badge>
                     ))}
                     {o.out_of_scope_last_30d ? <Badge>Out-of-scope requests: {o.out_of_scope_last_30d}</Badge> : null}
                   </div>
@@ -61,11 +61,11 @@ export default async function ApprovalsPage() {
                   <div className="flex flex-wrap gap-4 text-sm">
                     <label className="flex items-center gap-2">
                       <input type="checkbox" name="refer" defaultChecked={requested.has("refer")} className="size-4 accent-[var(--primary)]" />
-                      Can refer
+                      Approve as partner / anchor (refers)
                     </label>
                     <label className="flex items-center gap-2">
                       <input type="checkbox" name="receive" defaultChecked={requested.has("receive")} className="size-4 accent-[var(--primary)]" />
-                      Can receive
+                      Approve as provider (receives)
                     </label>
                   </div>
                   <input

@@ -14,9 +14,11 @@ type Overview = Record<
 
 export default async function AdminOverview() {
   const supabase = await createClient();
-  const [{ data }, { count: followups }] = await Promise.all([
+  const [{ data }, { count: followups }, { count: docs }, { count: feedback }] = await Promise.all([
     supabase.rpc("admin_overview"),
     supabase.from("organization_followups").select("org_id", { count: "exact", head: true }).lte("next_followup_at", new Date().toISOString()),
+    supabase.from("professional_documents").select("id", { count: "exact", head: true }).eq("status", "submitted"),
+    supabase.from("assignment_feedback").select("id", { count: "exact", head: true }).eq("verified", false),
   ]);
   const o = (data ?? {}) as Overview;
 
@@ -27,6 +29,8 @@ export default async function AdminOverview() {
     { n: o.unmatched, href: "/admin/referrals?status=qualified", text: "qualified referrals without a provider" },
     { n: o.no_response, href: "/admin/referrals?status=assigned", text: "opportunities without provider response for 24h+" },
     { n: o.growth_behind, href: "/admin/growth", text: "Growth contracts behind pace" },
+    { n: docs ?? 0, href: "/admin/providers", text: "provider documents to review" },
+    { n: feedback ?? 0, href: "/admin/referrals?status=assigned", text: "feedbacks waiting for verification" },
     { n: followups ?? 0, href: "/admin/organizations?followup=due", text: "partner follow-ups due" },
   ].filter((a) => a.n > 0);
 
@@ -35,7 +39,7 @@ export default async function AdminOverview() {
       <PageHeader title="Overview" description="BookedUp Orlando · live numbers" />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Organizations" value={o.total_orgs ?? 0} />
-        <StatCard label="Approved partners" value={o.partners ?? 0} hint="Can refer" />
+        <StatCard label="Approved partners (anchors)" value={o.partners ?? 0} hint="Can refer" />
         <StatCard label="Approved providers" value={o.providers ?? 0} hint="Can receive" />
         <StatCard label="Pending approvals" value={o.pending_orgs ?? 0} />
         <StatCard label="New referrals" value={o.new_referrals_7d ?? 0} hint="Last 7 days" />

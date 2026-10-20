@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED = ["/app", "/admin"];
+const PROTECTED = ["/app", "/admin", "/partner", "/provider", "/onboarding"];
 
 /** Refreshes the auth session on every request and keeps signed-out users out of private areas. */
 export async function updateSession(request: NextRequest) {
