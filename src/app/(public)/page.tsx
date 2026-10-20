@@ -85,7 +85,6 @@ export default function HomePage() {
       {/* hero */}
       <section className="wrap grid items-center gap-14 pt-12 pb-14 sm:pt-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="grid justify-items-start gap-6">
-          <span className="pub-kicker">Free local referral network · Orlando, FL</span>
           <h1 className="text-[40px] sm:text-[52px] lg:text-[56px]">
             More local connections.
             <br />
