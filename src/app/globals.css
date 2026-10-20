@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* BookedUp design tokens — purple, white, black. No blue. */
+:root {
+  --purple-600: #7c3aed; /* Primary Purple */
+  --purple-800: #5b21b6; /* Dark Purple */
+  --purple-100: #ede9fe; /* Light Purple */
+  --purple-950: #2e1065; /* Deep Purple */
+  --white: #ffffff;
+  --off-white: #fafafa;
+  --black: #09090b;
+  --gray-800: #27272a;
+  --gray-100: #f4f4f5;
+  --gray-200: #e4e4e7;
+  --gray-500: #71717a;
+
+  --background: var(--white);
+  --surface: var(--off-white);
+  --foreground: var(--black);
+  --muted: var(--gray-500);
+  --border: var(--gray-200);
+  --primary: var(--purple-600);
+  --primary-hover: var(--purple-800);
+  --primary-soft: var(--purple-100);
+  --primary-deep: var(--purple-950);
+  --success: #15803d;
+  --warning: #a16207;
+  --danger: #b91c1c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-deep: var(--primary-deep);
+  --color-ink: var(--black);
+  --color-ink-soft: var(--gray-800);
+  --color-subtle: var(--gray-100);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+}
+h1, h2, h3 { text-wrap: balance; letter-spacing: -0.02em; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
