@@ -15,7 +15,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             </span>
           </Link>
           <nav className="links">
-            <Link href="/how-it-works" className="link">How it works</Link>
+            <Link href="/#how-it-works" className="link">How it works</Link>
             <Link href="/directory" className="link">Directory</Link>
             <Link href="/services" className="link">Services</Link>
             <Link href="/login" className="link !inline-block">Sign in</Link>
@@ -25,14 +25,35 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       </div>
       <main className="flex-1">{children}</main>
       <footer className="pub-footer mt-16">
-        <div className="wrap flex flex-col gap-3 py-10 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} BookedUp · Orlando, Florida</span>
-          <nav className="flex flex-wrap gap-x-5 gap-y-2" aria-label="Legal">
-            <Link href="/directory">Directory</Link>
-            <Link href="/services">Services</Link>
-            <Link href="/privacy">Privacy</Link>
-            <Link href="/terms">Terms</Link>
+        <div className="wrap grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          <div className="grid content-start gap-3">
+            <span className="flex items-center gap-2 font-extrabold tracking-wide">
+              <span aria-hidden className="grid size-7 place-items-center rounded-lg bg-[var(--accent)] font-mono text-sm text-white">B</span>
+              BOOKEDUP PARTNER CIRCLE
+            </span>
+            <p className="m-0 font-bold">Better connections. Better service. Stronger local businesses.</p>
+            <p className="m-0 text-sm text-[rgba(247,244,254,.65)]">A local referral initiative by BookedUp.</p>
+          </div>
+          <nav className="grid content-start gap-2 text-sm" aria-label="Navigation">
+            <span className="pub-flow-label">Navigation</span>
+            <Link href="/">Home</Link>
+            <Link href="/#how-it-works">How It Works</Link>
+            <Link href="/services">Services &amp; Coverage</Link>
+            <Link href="/directory">Partner Directory</Link>
+            <Link href="/signup">Join the Network</Link>
           </nav>
+          <nav className="grid content-start gap-2 text-sm" aria-label="Legal">
+            <span className="pub-flow-label">Legal</span>
+            <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/terms">Terms of Service</Link>
+          </nav>
+          <div className="grid content-start gap-2 text-sm">
+            <span className="pub-flow-label">Service Area</span>
+            <span>Orlando, Florida · Central Florida</span>
+          </div>
+        </div>
+        <div className="border-t border-[rgba(247,244,254,.12)]">
+          <p className="wrap m-0 py-5 text-xs text-[rgba(247,244,254,.6)]">© 2026 BookedUp. All rights reserved.</p>
         </div>
       </footer>
     </div>
