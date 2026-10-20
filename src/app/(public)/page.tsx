@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowRight, BadgeCheck, Handshake, Lock, MapPin, Send, ShieldCheck, UserRound } from "lucide-react";
+import { Inbox, Send } from "lucide-react";
 
 export const metadata: Metadata = {
   title: { absolute: "BookedUp Network · Free Local Referral Network · Orlando, FL" },
@@ -50,147 +50,98 @@ function FlowPanel() {
   );
 }
 
-const steps = [
-  { icon: UserRound, t: "Apply", d: "Tell us your services and service area. We review every business." },
-  { icon: Send, t: "Refer", d: "Send a request you don't handle — only with the homeowner's permission." },
-  { icon: Handshake, t: "Get introduced", d: "When a request fits your trade and area, you may be considered." },
-];
-
-const trust = [
-  { icon: Lock, t: "Homeowner permission first", d: "Contact details are never shared without it." },
-  { icon: BadgeCheck, t: "Every business is reviewed", d: "Badges are earned with verified documents and track record." },
-  { icon: Handshake, t: "Keep your partners", d: "No exclusivity. No referral quotas." },
-  { icon: ShieldCheck, t: "No empty promises", d: "We don't guarantee leads, projects or revenue." },
-];
-
-const faq = [
-  {
-    q: "Is it really free?",
-    a: "Yes. No setup or monthly fee. BookedUp sells separate growth services to contractors — they're optional.",
-  },
-  {
-    q: "Will you send me customers?",
-    a: "You may be considered when a request fits your service, area and availability. Volume isn't guaranteed.",
-  },
-  { q: "Do I have to send referrals?", a: "No. There are no quotas. Refer only when it helps your customer." },
-  {
-    q: "Does BookedUp guarantee a contractor's work?",
-    a: "No. Providers are independent businesses. Verify license, insurance and references before hiring.",
-  },
-];
-
 export default function HomePage() {
   return (
     <>
-      {/* hero */}
+      {/* 01 · hero */}
       <section className="wrap grid items-center gap-14 pt-12 pb-14 sm:pt-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="grid justify-items-start gap-6">
           <h1 className="text-[40px] sm:text-[52px] lg:text-[56px]">
-            More local connections.
-            <br />
-            <span className="hl">More opportunities for your business.</span>
+            Stop Losing Opportunities <span className="hl">Outside Your Scope.</span>
           </h1>
-          <p className="m-0 max-w-xl text-[18px] font-bold leading-[1.6]">
-            Join a free network of local home-service businesses that help each other connect with new customers.
+          <p className="m-0 max-w-xl text-[19px] font-bold leading-[1.5]">
+            Your customers need more than one service. Your business doesn&apos;t have to provide them all.
           </p>
+          <p className="pub-lead m-0 max-w-xl">Join a free network of local home-service businesses that share relevant opportunities.</p>
           <div className="flex flex-wrap gap-2">
-            <span className="pub-softtag">No fees</span>
+            <span className="pub-softtag">Free to join</span>
             <span className="pub-softtag">No exclusivity</span>
             <span className="pub-softtag">No referral quotas</span>
           </div>
           <Cta>Become a Free Local Partner →</Cta>
-          <p className="pub-mono-note m-0 max-w-xl">Free to join. Referral opportunities depend on availability and fit. No guaranteed volume.</p>
         </div>
         <FlowPanel />
       </section>
 
-      {/* how it works */}
+      {/* 02 · how it works */}
       <section id="how-it-works" className="pub-sec wrap">
         <div className="pub-head">
           <h2>
-            Simple by <span className="hl">design.</span>
+            Refer work. <span className="hl">Get considered for work.</span>
           </h2>
         </div>
-        <ol className="grid gap-6 p-0 md:grid-cols-3">
-          {steps.map((s, i) => (
-            <li key={s.t} className="pub-card grid list-none content-start gap-4">
-              <div className="flex items-center justify-between">
-                <span className="pub-icon">
-                  <s.icon aria-hidden className="size-5" />
-                </span>
-                <span className="pub-num">0{i + 1}</span>
-              </div>
-              <h3 className="text-[24px]">{s.t}</h3>
-              <p className="m-0 text-[15px] text-[var(--ink-soft)]">{s.d}</p>
-            </li>
-          ))}
-        </ol>
+        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
+          <article className="pub-card grid content-start gap-4">
+            <span className="pub-icon">
+              <Send aria-hidden className="size-5" />
+            </span>
+            <h3 className="text-[26px]">You Refer</h3>
+            <p className="m-0 text-[16px] text-[var(--ink-soft)]">Your customer needs a service you don&apos;t provide.</p>
+          </article>
+          <article className="pub-card grid content-start gap-4">
+            <span className="pub-icon">
+              <Inbox aria-hidden className="size-5" />
+            </span>
+            <h3 className="text-[26px]">You May Receive</h3>
+            <p className="m-0 text-[16px] text-[var(--ink-soft)]">Another partner has a request that fits your business.</p>
+          </article>
+        </div>
       </section>
 
-      {/* trust */}
-      <section id="benefits" className="pub-sec wrap">
-        <div className="pub-dark grid gap-8 px-6 py-12 sm:px-10">
-          <div className="grid gap-3">
-            <span className="pub-flow-label">YOUR CUSTOMERS. YOUR REPUTATION.</span>
-            <h2 className="text-[32px] sm:text-[40px]">Built on trust.</h2>
+      {/* 03 · example */}
+      <section id="example" className="pub-sec wrap">
+        <div className="pub-dark mx-auto grid max-w-4xl gap-5 px-6 py-10 sm:px-12 sm:py-14">
+          <span className="pub-flow-label">EXAMPLE</span>
+          <h2 className="text-[30px] sm:text-[40px]">You&apos;re a flooring contractor.</h2>
+          <ol className="grid gap-3 p-0">
+            {[
+              "Your customer needs a full bathroom remodel. You don't offer that service.",
+              "With their permission, send the request to BookedUp. We'll look for a suitable remodeling contractor.",
+              "Next time another business has a flooring request, your company may be considered.",
+            ].map((t, i) => (
+              <li key={i} className="flex list-none gap-4 rounded-[14px] border-[1.5px] border-[rgba(247,244,254,.18)] bg-[rgba(247,244,254,.05)] p-4">
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--accent)] font-mono text-sm font-bold text-white">{i + 1}</span>
+                <span className="text-[16px] leading-[1.6] text-[rgba(247,244,254,.9)]">{t}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* 04 · no commitment */}
+      <section id="no-risk" className="pub-sec wrap">
+        <div className="pub-head !mb-0">
+          <h2>
+            Keep Your Partners. <span className="hl">Join Ours Too.</span>
+          </h2>
+          <div className="flex flex-wrap justify-center gap-2">
+            <span className="pub-softtag">No fees.</span>
+            <span className="pub-softtag">No exclusivity.</span>
+            <span className="pub-softtag">No referral quotas.</span>
+            <span className="pub-softtag">No guaranteed lead volume.</span>
           </div>
-          <ul className="grid gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4">
-            {trust.map((x) => (
-              <li key={x.t} className="grid list-none content-start gap-2 rounded-[14px] border-[1.5px] border-[rgba(247,244,254,.18)] bg-[rgba(247,244,254,.05)] p-5">
-                <x.icon aria-hidden className="size-6 text-[var(--accent-glow)]" />
-                <p className="m-0 font-extrabold">{x.t}</p>
-                <p className="m-0 text-[14px] text-[rgba(247,244,254,.75)]">{x.d}</p>
-              </li>
-            ))}
-          </ul>
+          <p className="pub-note m-0">BookedUp also offers separate optional paid growth services.</p>
         </div>
       </section>
 
-      {/* price + area */}
-      <section id="who-its-for" className="pub-sec wrap grid gap-6 md:grid-cols-2">
-        <div className="pub-card grid content-start gap-3 !p-8">
-          <span className="pub-eyebrow">WHAT DOES IT COST?</span>
-          <p className="pub-price m-0">$0.</p>
-          <p className="m-0 text-[17px] font-bold">No setup fee. No monthly fee. No obligation.</p>
-        </div>
-        <div className="pub-card grid content-start gap-4 !p-8">
-          <span className="pub-eyebrow">STARTING IN CENTRAL FLORIDA</span>
-          <ul className="flex flex-wrap gap-2 p-0">
-            {["Orlando", "Kissimmee", "Sanford", "Winter Park", "Altamonte Springs"].map((c) => (
-              <li key={c} className="pub-pill list-none !shadow-none">
-                <MapPin aria-hidden className="size-4 text-[var(--accent)]" /> {c}
-              </li>
-            ))}
-          </ul>
-          <p className="m-0 text-[15px] text-[var(--ink-soft)]">Nearby areas are welcome to apply.</p>
-        </div>
-      </section>
-
-      {/* faq */}
-      <section id="faq" className="pub-sec wrap">
-        <div className="pub-head">
-          <h2>Questions</h2>
-        </div>
-        <div className="pub-faq mx-auto grid max-w-3xl gap-3">
-          {faq.map((f) => (
-            <details key={f.q}>
-              <summary>{f.q}</summary>
-              <p>{f.a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      {/* final cta */}
+      {/* 05 · final cta */}
       <section className="pub-sec wrap">
         <div className="pub-dark grid justify-items-center gap-6 px-6 py-14 text-center">
           <h2 className="max-w-2xl text-[34px] sm:text-[48px]">
-            Good business comes from <span className="text-[var(--accent-glow)]">good connections.</span>
+            Good Business Comes From <span className="text-[var(--accent-glow)]">Good Connections.</span>
           </h2>
-          <Cta>
-            Become a Free Local Partner <ArrowRight aria-hidden className="size-5" />
-          </Cta>
-          <p className="m-0 text-[13px] text-[rgba(247,244,254,.65)]">Free to join · Applications reviewed for fit · No guaranteed volume</p>
+          <p className="m-0 text-[17px] text-[rgba(247,244,254,.85)]">Join the BookedUp Network for free.</p>
+          <Cta>Become a Free Local Partner →</Cta>
         </div>
       </section>
     </>

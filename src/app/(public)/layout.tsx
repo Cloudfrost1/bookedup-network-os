@@ -22,9 +22,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           </Link>
           <nav className="center" aria-label="Sections">
             <Link href="/#how-it-works" className="link bold">How it works</Link>
-            <Link href="/#benefits" className="link bold">Benefits</Link>
-            <Link href="/#who-its-for" className="link bold">Who it&apos;s for</Link>
-            <Link href="/#faq" className="link bold">FAQ</Link>
+            <Link href="/#example" className="link bold">Example</Link>
+            <Link href="/#no-risk" className="link bold">No risk</Link>
           </nav>
           <nav className="links" aria-label="Account">
             <Link href="/login" className="link !inline-block">Sign in</Link>
