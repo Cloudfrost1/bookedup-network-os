@@ -58,3 +58,27 @@ body {
 h1, h2, h3 { text-wrap: balance; letter-spacing: -0.02em; }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Dark theme for the platform (partner, provider and admin areas). Toggled by the user; stored in the "theme" cookie. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --gray-800: #d4d4d8; /* ink-soft: secondary text */
+  --gray-100: #24222b; /* subtle: hover / chips */
+  --gray-200: #2e2b37;
+  --gray-500: #a1a1aa;
+  --background: #17161c;
+  --surface: #0e0d12;
+  --foreground: #f4f3f8;
+  --muted: #a1a1aa;
+  --border: #2e2b37;
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --primary-soft: #2a1f47;
+  --primary-deep: #ddd6fe;
+  --success: #4ade80;
+  --warning: #facc15;
+  --danger: #f87171;
+  color: var(--foreground);
+}
+[data-theme="dark"] .bg-ink { background-color: #2e2b37; }
+[data-theme="dark"] ::placeholder { color: #71717a; }

@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { LogOut } from "lucide-react";
+import { ThemeToggle } from "./theme-toggle";
 import { Logo } from "@/components/brand";
 import { signOut } from "@/modules/auth/actions";
 import type { NavItem } from "@/modules/navigation";
@@ -14,13 +16,15 @@ type Props = {
 };
 
 /** Shared shell for the business app and the admin: white sidebar on desktop, top bar + drawer on mobile. */
-export function Shell({ items, homeHref, title, userLabel, context, children }: Props) {
+export async function Shell({ items, homeHref, title, userLabel, context, children }: Props) {
+  const theme = (await cookies()).get("theme")?.value === "dark" ? "dark" : "light";
   const links = items.map(({ href, label, icon: Icon }) => ({ href, label, icon: <Icon aria-hidden className="size-4" /> }));
   const footer = (
     <div className="grid gap-2 border-t border-border p-3">
       <p className="truncate px-2 text-xs text-muted" title={userLabel}>
         {userLabel}
       </p>
+      <ThemeToggle initial={theme} />
       <form action={signOut}>
         <button className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-subtle">
           <LogOut aria-hidden className="size-4" /> Sign out
@@ -30,7 +34,7 @@ export function Shell({ items, homeHref, title, userLabel, context, children }: 
   );
 
   return (
-    <div className="min-h-dvh bg-surface lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
+    <div data-theme-root data-theme={theme} className="min-h-dvh bg-surface text-foreground lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
       <aside className="hidden border-r border-border bg-background lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
         <div className="grid gap-1 px-5 py-5">
           <Logo href={homeHref} />
