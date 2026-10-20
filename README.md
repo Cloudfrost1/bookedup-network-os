@@ -29,6 +29,8 @@ npm run dev                   # http://localhost:3000
 
 Project: `bookedup-network` (ref `aizjanewywwasjlmuzzu`, us-east-1). Migrations live in `supabase/migrations` and are already applied.
 
+Production: https://bookedup-network-os.vercel.app (Vercel project `bookedup-network-os`, deploys on every push to `main`).
+
 **Auth settings to configure in the Supabase dashboard (Authentication → URL Configuration):**
 - Site URL: the production URL (e.g. `https://network.bookedup.com`)
 - Redirect URLs: `http://localhost:3000/**` and the production `https://…/**`
