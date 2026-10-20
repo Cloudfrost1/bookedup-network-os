@@ -1,7 +1,7 @@
 /* Public site: cream grid paper, floating dark pill nav, flat cards with ink borders and hard offset shadows.
    Accent is BookedUp purple. 4px spacing grid, 1.6 body line-height. */
 .pub {
-  --cream: #faf8f2;
+  --cream: #fcf7e3;
   --cream-2: #f1edfb;
   --paper: #fffefa;
   --ink: #17120d;
@@ -155,3 +155,44 @@
 .pub-faq p { margin: 10px 0 0; color: var(--ink-soft); }
 .pub-card.flat { box-shadow: none; }
 .pub-card.flat:hover { transform: none; box-shadow: var(--hard-sm); }
+
+/* ---- hero v3 (stacked flow panel) ---- */
+.pub-nav-brand { display: inline-flex; align-items: center; gap: 12px; white-space: nowrap; }
+.pub-nav-brand .mark {
+  width: 34px; height: 34px; border-radius: 9px; background: var(--accent); border: 2px solid var(--on-dark);
+  display: grid; place-items: center; color: #fff;
+}
+.pub-nav-brand b { display: block; font-weight: 800; font-size: 18px; line-height: 1.1; color: var(--on-dark); }
+.pub-nav-brand small { display: block; font-family: var(--f-mono); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: var(--accent-glow); }
+.pub-nav .center { display: flex; gap: 4px; }
+.pub-nav .link.bold { font-size: 15px; font-weight: 800; }
+.pub-kicker { font-family: var(--f-mono); font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); }
+.pub-softtag {
+  font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--accent-deep);
+  background: var(--accent-tint); border: 1px solid rgba(124, 58, 237, 0.35); border-radius: 6px; padding: 5px 10px;
+}
+.pub-mono-note { font-family: var(--f-mono); font-size: 12px; line-height: 1.6; color: var(--ink-mute); }
+.pub-stack { position: relative; }
+.pub-stack::before {
+  content: ""; position: absolute; inset: 14px -14px -14px 14px; background: var(--dark-2); border: 2px solid var(--ink); border-radius: 24px;
+}
+.pub-stack > .panel { position: relative; }
+.pub-fcard { background: var(--paper); color: var(--ink); border: 2px solid var(--ink); border-radius: 12px; padding: 12px 14px; display: grid; gap: 4px; }
+.pub-fcard.hot { background: var(--accent); color: #fff; }
+.pub-fcard.hot small { color: rgba(255, 255, 255, 0.85); }
+.pub-fcard b { font-size: 16px; font-weight: 800; line-height: 1.3; }
+.pub-fcard small { font-size: 13px; color: var(--ink-mute); }
+.pub-ftag { justify-self: start; font-family: var(--f-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  border: 1.5px solid var(--ink); border-radius: 4px; padding: 2px 8px; background: #fbf3d6; color: var(--ink); }
+.pub-ftag.out { background: #fde7e4; color: #9f2a1c; }
+.pub-ftag.ok { background: var(--accent); color: #fff; }
+.pub-fconn { display: flex; align-items: center; gap: 8px; padding-left: 18px; font-family: var(--f-mono); font-size: 12px; color: rgba(247, 244, 254, 0.75); }
+.pub-fconn::before { content: ""; width: 2px; height: 14px; background: var(--accent-glow); }
+@media (max-width: 1080px) { .pub-nav .center { display: none; } }
+@media (max-width: 560px) {
+  .pub-stack::before { inset: 10px -8px -10px 8px; }
+  .pub-nav-brand b { font-size: 15px; }
+  .pub-nav-brand small { font-size: 9px; }
+  .pub-nav-brand .mark { width: 28px; height: 28px; }
+}
+@media (max-width: 420px) { .pub-nav-brand > span:last-child { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }

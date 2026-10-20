@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
 import "@fontsource-variable/manrope";
 import "@fontsource/fira-code/700.css";
 import "./public.css";
@@ -8,18 +9,24 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     <div className="pub flex min-h-dvh flex-col">
       <div className="px-4">
         <header className="pub-nav" aria-label="Main">
-          <Link href="/" className="pub-logo">
-            <i aria-hidden>B</i>
+          <Link href="/" className="pub-nav-brand">
+            <span className="mark" aria-hidden>
+              <Check className="size-5" strokeWidth={3} />
+            </span>
             <span>
-              BookedUp<em> Network</em>
+              <b>BookedUp</b>
+              <small>PARTNER CIRCLE</small>
             </span>
           </Link>
-          <nav className="links">
-            <Link href="/#how-it-works" className="link">How it works</Link>
-            <Link href="/directory" className="link">Directory</Link>
-            <Link href="/services" className="link">Services</Link>
+          <nav className="center" aria-label="Sections">
+            <Link href="/#how-it-works" className="link bold">How it works</Link>
+            <Link href="/#benefits" className="link bold">Benefits</Link>
+            <Link href="/#who-its-for" className="link bold">Who it&apos;s for</Link>
+            <Link href="/#faq" className="link bold">FAQ</Link>
+          </nav>
+          <nav className="links" aria-label="Account">
             <Link href="/login" className="link !inline-block">Sign in</Link>
-            <Link href="/signup" className="pub-btn sm">Join the Network</Link>
+            <Link href="/signup" className="pub-btn sm">Become a Free Partner →</Link>
           </nav>
         </header>
       </div>

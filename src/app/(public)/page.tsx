@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowDown, ArrowRight, BadgeCheck, Handshake, Lock, MapPin, Send, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowRight, BadgeCheck, Handshake, Lock, MapPin, Send, ShieldCheck, UserRound } from "lucide-react";
 
 export const metadata: Metadata = {
   title: { absolute: "BookedUp Partner Circle · Free Local Referral Network · Orlando, FL" },
@@ -16,28 +16,36 @@ function Cta({ children, href = "/signup", ghost = false }: { children: React.Re
   );
 }
 
-/** Compact two-way flow: one line each, no paragraphs. */
-function FlowCard() {
-  const rows = [
-    { label: "YOU REFER", steps: ["Customer needs a service you don't offer", "Homeowner gives permission", "BookedUp finds a fit"] },
-    { label: "YOU RECEIVE", steps: ["A partner gets a request in your trade", "BookedUp reviews the fit", "You're introduced"] },
-  ];
+/** Two-way flow panel: what comes to you, what goes out from you. */
+function FlowPanel() {
   return (
-    <div className="pub-dark grid gap-6 p-6 sm:p-8" role="img" aria-label="Opportunities flow both ways through BookedUp">
-      {rows.map((r) => (
-        <div key={r.label} className="grid gap-3">
-          <span className="pub-flow-label">{r.label}</span>
-          <ol className="grid gap-2 p-0">
-            {r.steps.map((s, i) => (
-              <li key={s} className="flex list-none items-center gap-3 rounded-[12px] bg-[var(--paper)] px-3 py-2.5 text-[15px] font-bold text-[var(--ink)]">
-                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[var(--accent)] font-mono text-xs text-white">{i + 1}</span>
-                {s}
-              </li>
-            ))}
-          </ol>
+    <div className="pub-stack" role="img" aria-label="Opportunities flow both ways through BookedUp">
+      <div className="panel pub-dark grid gap-3 p-5 sm:p-6">
+        <span className="pub-flow-label">COMING YOUR WAY</span>
+        <div className="pub-fcard">
+          <span className="pub-ftag">BookedUp</span>
+          <b>Flooring request in your area</b>
+          <small>A homeowner needs new tile</small>
         </div>
-      ))}
-      <p className="m-0 text-center font-extrabold">One network. Both ways.</p>
+        <span className="pub-fconn">If it&apos;s a fit</span>
+        <div className="pub-fcard hot">
+          <span className="pub-ftag">Your business</span>
+          <b>Considered for an introduction</b>
+          <small>Based on service, area and availability</small>
+        </div>
+        <span className="pub-flow-label mt-3">GOING OUT FROM YOU</span>
+        <div className="pub-fcard">
+          <span className="pub-ftag out">Outside your scope</span>
+          <b>Your customer wants a full remodel</b>
+          <small>Sent with their permission</small>
+        </div>
+        <span className="pub-fconn">BookedUp looks for a match</span>
+        <div className="pub-fcard">
+          <span className="pub-ftag ok">Connected</span>
+          <b>Local remodeling contractor</b>
+          <small>When one is available</small>
+        </div>
+      </div>
     </div>
   );
 }
@@ -75,33 +83,26 @@ export default function HomePage() {
   return (
     <>
       {/* hero */}
-      <section className="wrap grid items-center gap-12 pt-14 pb-12 sm:pt-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+      <section className="wrap grid items-center gap-14 pt-12 pb-14 sm:pt-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="grid justify-items-start gap-6">
-          <span className="pub-pill">
-            <span className="dot" aria-hidden /> FREE LOCAL REFERRAL NETWORK · ORLANDO, FL
-          </span>
-          <h1 className="text-[40px] sm:text-[54px] lg:text-[60px]">
-            Stop Losing Opportunities <span className="hl">Outside Your Scope.</span>
+          <span className="pub-kicker">Free local referral network · Orlando, FL</span>
+          <h1 className="text-[40px] sm:text-[52px] lg:text-[56px]">
+            More local connections.
+            <br />
+            <span className="hl">More opportunities for your business.</span>
           </h1>
-          <p className="pub-lead m-0 max-w-xl">
-            Refer the work you don&apos;t do. Be considered for the work you do. A free network of trusted home-service businesses in Central
-            Florida.
+          <p className="m-0 max-w-xl text-[18px] font-bold leading-[1.6]">
+            Join a free network of local home-service businesses that help each other connect with new customers.
           </p>
-          <div className="pub-tags">
-            <span className="pub-tag">No fees</span>
-            <span className="pub-tag">No exclusivity</span>
-            <span className="pub-tag">No quotas</span>
+          <div className="flex flex-wrap gap-2">
+            <span className="pub-softtag">No fees</span>
+            <span className="pub-softtag">No exclusivity</span>
+            <span className="pub-softtag">No referral quotas</span>
           </div>
-          <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
-            <Cta>
-              Become a Free Local Partner <ArrowRight aria-hidden className="size-5" />
-            </Cta>
-            <Cta href="#how-it-works" ghost>
-              How It Works <ArrowDown aria-hidden className="size-5" />
-            </Cta>
-          </div>
+          <Cta>Become a Free Local Partner →</Cta>
+          <p className="pub-mono-note m-0 max-w-xl">Free to join. Referral opportunities depend on availability and fit. No guaranteed volume.</p>
         </div>
-        <FlowCard />
+        <FlowPanel />
       </section>
 
       {/* how it works */}
@@ -128,7 +129,7 @@ export default function HomePage() {
       </section>
 
       {/* trust */}
-      <section className="pub-sec wrap">
+      <section id="benefits" className="pub-sec wrap">
         <div className="pub-dark grid gap-8 px-6 py-12 sm:px-10">
           <div className="grid gap-3">
             <span className="pub-flow-label">YOUR CUSTOMERS. YOUR REPUTATION.</span>
@@ -147,7 +148,7 @@ export default function HomePage() {
       </section>
 
       {/* price + area */}
-      <section className="pub-sec wrap grid gap-6 md:grid-cols-2">
+      <section id="who-its-for" className="pub-sec wrap grid gap-6 md:grid-cols-2">
         <div className="pub-card grid content-start gap-3 !p-8">
           <span className="pub-eyebrow">WHAT DOES IT COST?</span>
           <p className="pub-price m-0">$0.</p>
