@@ -293,3 +293,35 @@ export async function verifyFeedback(formData: FormData) {
   revalidatePath("/admin", "layout");
   redirect(back(`/admin/referrals/${referral}`, error ? "Could not update the feedback." : "Feedback updated.", !error));
 }
+
+/* ---------------------------------------------------------------- delete / restore (super admin) */
+
+export async function deleteOrganization(formData: FormData) {
+  const access = await requireAdmin();
+  const org = uuid.parse(formData.get("orgId"));
+  const path = `/admin/organizations/${org}`;
+  if (access.platformRole !== "super_admin") redirect(back(path, "Only super admins can delete organizations."));
+  const supabase = await createClient();
+  const { data: o } = await supabase.from("organizations").select("name").eq("id", org).maybeSingle();
+  const typed = String(formData.get("confirmName") ?? "").trim();
+  if (!o || typed.toLowerCase() !== String(o.name).trim().toLowerCase()) {
+    redirect(back(path, "Type the exact business name to confirm."));
+  }
+  const { error } = await call("admin_delete_organization", {
+    p_org: org,
+    p_reason: String(formData.get("reason") ?? "").trim().slice(0, 500) || null,
+  });
+  revalidatePath("/", "layout");
+  if (error) redirect(back(path, "Could not delete the organization."));
+  redirect(back("/admin/organizations", `${o!.name} was removed from the network.`, true));
+}
+
+export async function restoreOrganization(formData: FormData) {
+  const access = await requireAdmin();
+  const org = uuid.parse(formData.get("orgId"));
+  const path = `/admin/organizations/${org}`;
+  if (access.platformRole !== "super_admin") redirect(back(path, "Only super admins can restore organizations."));
+  const { error } = await call("admin_restore_organization", { p_org: org });
+  revalidatePath("/", "layout");
+  redirect(back(path, error ? "Could not restore." : "Restored. It is back in Pending Approvals.", !error));
+}

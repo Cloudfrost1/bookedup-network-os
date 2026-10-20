@@ -33,9 +33,9 @@ export default async function OrganizationsPage({
   let q = supabase
     .from("organizations")
     .select("id, name, city, status, verification, created_at, organization_capabilities(capability, status), organization_followups(next_followup_at)")
-    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(300);
+  q = sp.status === "deleted" ? q.not("deleted_at", "is", null) : q.is("deleted_at", null);
   if (sp.q) q = q.ilike("name", `%${sp.q.replace(/[%_,]/g, "").slice(0, 80)}%`);
   if (sp.status && ["pending_review", "approved", "suspended", "rejected"].includes(sp.status)) q = q.eq("status", sp.status);
   const { data } = await q;
@@ -58,6 +58,7 @@ export default async function OrganizationsPage({
           <option value="approved">Approved</option>
           <option value="suspended">Suspended</option>
           <option value="rejected">Rejected</option>
+          <option value="deleted">Deleted</option>
         </select>
         <Button variant="secondary">Filter</Button>
       </form>

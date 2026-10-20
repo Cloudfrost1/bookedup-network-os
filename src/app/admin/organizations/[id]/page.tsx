@@ -9,7 +9,8 @@ import { Flash } from "@/components/ui/flash";
 import { Field, Input } from "@/components/ui/form";
 import { Checkbox, Select, Textarea } from "@/components/ui/inputs";
 import { createClient } from "@/lib/supabase/server";
-import { reviewDocument, saveFollowup, updateOrganizationAdmin } from "@/modules/admin/actions";
+import { deleteOrganization, restoreOrganization, reviewDocument, saveFollowup, updateOrganizationAdmin } from "@/modules/admin/actions";
+import { requireAdmin } from "@/modules/auth/session";
 import { ReliabilityView, type Reliability } from "@/modules/provider/reliability-view";
 import { docKindLabel } from "@/modules/provider/labels";
 import { date, dateTime, money, toneFor } from "@/modules/format";
@@ -27,12 +28,14 @@ export default async function OrganizationAdminPage({
 }) {
   const { id } = await params;
   const sp = await searchParams;
+  const access = await requireAdmin();
+  const isSuper = access.platformRole === "super_admin";
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
   const supabase = await createClient();
   const { data: org } = await supabase
     .from("organizations")
     .select(
-      "id, name, email, phone, website, city, state, zip, status, verification, referral_code, out_of_scope_last_30d, created_at, description, organization_capabilities(capability, status), organization_followups(last_contact_at, next_followup_at, outcome, notes)",
+      "id, name, email, phone, website, city, state, zip, status, verification, deleted_at, referral_code, out_of_scope_last_30d, created_at, description, organization_capabilities(capability, status), organization_followups(last_contact_at, next_followup_at, outcome, notes)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -83,6 +86,7 @@ export default async function OrganizationAdminPage({
       <PageHeader title={org.name} description={[org.city, org.state, org.zip].filter(Boolean).join(", ") + ` · joined ${date(org.created_at)}`} />
       <Flash sp={sp} />
       <div className="flex flex-wrap gap-2">
+        {org.deleted_at ? <Badge tone="danger">Deleted {date(org.deleted_at)}</Badge> : null}
         <Badge tone={toneFor(org.status)}>{org.status.replace("_", " ")}</Badge>
         <Badge tone={toneFor(String(activation))}>Activation: {String(activation ?? "—")}</Badge>
         {r.partner ? <Badge>{r.partner.score === null ? "Partner: not enough data" : `${r.partner.level} · ${r.partner.score}`}</Badge> : null}
@@ -225,6 +229,31 @@ export default async function OrganizationAdminPage({
           </Card>
           {rel ? <ReliabilityView r={rel as Reliability} /> : null}
         </section>
+      ) : null}
+      {isSuper ? (
+        <Card className="grid gap-3 border-danger/40">
+          <h2 className="font-semibold text-danger">{org.deleted_at ? "Restore organization" : "Delete organization"}</h2>
+          {org.deleted_at ? (
+            <form action={restoreOrganization} className="grid gap-3">
+              <input type="hidden" name="orgId" value={org.id} />
+              <p className="text-sm text-muted">Brings the business back as &quot;pending review&quot;. You will need to approve it and its access again.</p>
+              <Button size="sm" variant="secondary" className="justify-self-start">Restore organization</Button>
+            </form>
+          ) : (
+            <form action={deleteOrganization} className="grid gap-3">
+              <input type="hidden" name="orgId" value={org.id} />
+              <p className="text-sm text-muted">
+                Removes the business from the platform, directory and matching, revokes its access and withdraws unanswered
+                opportunities. Its members lose access to it. Referral history and the audit log are kept, and a super admin can restore it later.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input name="confirmName" placeholder={`Type "${org.name}" to confirm`} aria-label="Type the business name to confirm" required />
+                <Input name="reason" placeholder="Reason (optional, internal)" aria-label="Reason" maxLength={500} />
+              </div>
+              <Button size="sm" variant="danger" className="justify-self-start">Delete organization</Button>
+            </form>
+          )}
+        </Card>
       ) : null}
     </>
   );
