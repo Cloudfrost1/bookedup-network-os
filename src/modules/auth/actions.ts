@@ -69,7 +69,13 @@ export async function signUp(_: FormState, formData: FormData): Promise<FormStat
     },
   });
   if (error) {
+    if (error.code === "over_email_send_rate_limit")
+      return {
+        error: "We can't send the confirmation e-mail right now because too many sign-ups happened in the last hour. Please try again later.",
+        fields,
+      };
     if (error.status === 429) return { error: "Too many attempts. Wait a minute and try again.", fields };
+    if (error.code === "email_address_invalid") return { error: "Use a real e-mail address you can open — we send a confirmation link.", fields };
     if (/password/i.test(error.message)) return { error: "Choose a stronger password.", fields };
     return { error: "We could not create the account. Check the details and try again.", fields };
   }
