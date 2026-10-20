@@ -6,6 +6,7 @@ import { Table, Td } from "@/components/ui/inputs";
 import { createClient } from "@/lib/supabase/server";
 import { date, money, toneFor } from "@/modules/format";
 import type { Reliability } from "@/modules/provider/reliability-view";
+import { docsStatus } from "@/modules/provider/docs-status";
 
 export const metadata: Metadata = { title: "Providers" };
 
@@ -24,7 +25,7 @@ type Org = {
     lead_time_days: number | null;
     confirmed_at: string;
   } | null;
-  professional_documents: { status: string }[];
+  professional_documents: { kind: string; status: string; expires_on: string | null }[];
 };
 
 export default async function AdminProvidersPage() {
@@ -32,7 +33,7 @@ export default async function AdminProvidersPage() {
   const { data } = await supabase
     .from("organizations")
     .select(
-      "id, name, city, status, available_for_referrals, organization_capabilities!inner(capability, status), provider_capacity(accepting_new_work, weekly_capacity, min_project_value, max_project_value, lead_time_days, confirmed_at), professional_documents(status)",
+      "id, name, city, status, available_for_referrals, organization_capabilities!inner(capability, status), provider_capacity(accepting_new_work, weekly_capacity, min_project_value, max_project_value, lead_time_days, confirmed_at), professional_documents(kind, status, expires_on)",
     )
     .eq("organization_capabilities.capability", "receive")
     .is("deleted_at", null)
@@ -84,6 +85,15 @@ export default async function AdminProvidersPage() {
                     <Badge tone="success">Verified</Badge>
                   ) : docs.some((d) => d.status === "submitted") ? (
                     <Badge tone="warning">To review ({docs.filter((d) => d.status === "submitted").length})</Badge>
+                  ) : docs.length ? (
+                    <Badge tone="warning">
+                      Incomplete: {(() => {
+                        const s = docsStatus(docs);
+                        return [s.license !== "valid" ? `license ${s.license.replace("_", " ")}` : null, s.insurance !== "valid" ? `insurance ${s.insurance.replace("_", " ")}` : null]
+                          .filter(Boolean)
+                          .join(", ");
+                      })()}
+                    </Badge>
                   ) : (
                     <Badge>Missing</Badge>
                   )}

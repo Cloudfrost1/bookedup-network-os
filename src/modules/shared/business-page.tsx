@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/modules/auth/session";
 import { getCatalog } from "@/modules/network/catalog";
+import { docsStatus, type DocRow } from "@/modules/provider/docs-status";
 import { BusinessForm } from "./business-form";
 import { ServicesForm, TeamForm } from "./more-forms";
 
@@ -23,7 +24,7 @@ export default async function BusinessPage() {
   }
 
   const supabase = await createClient();
-  const [{ data: org }, { data: services }, { data: areas }, { data: team }, catalog] = await Promise.all([
+  const [{ data: org }, { data: services }, { data: areas }, { data: team }, catalog, { data: docRows }] = await Promise.all([
     supabase
       .from("organizations")
       .select("id, name, email, phone, website, state, city, zip, description, status, verification, referral_code, category_id, public_profile, available_for_referrals")
@@ -33,7 +34,9 @@ export default async function BusinessPage() {
     supabase.from("organization_service_areas").select("region_id").eq("org_id", current.id),
     supabase.rpc("org_team", { p_org: current.id }),
     getCatalog(),
+    supabase.from("professional_documents").select("kind, status, expires_on").eq("org_id", current.id),
   ]);
+  const docsVerified = docsStatus((docRows ?? []) as DocRow[]).verified;
   if (!org) return <EmptyState title="Business not found" />;
 
   const canEdit = current.role === "owner" || current.role === "manager";
@@ -45,9 +48,7 @@ export default async function BusinessPage() {
       <PageHeader title="My Business" description="Your profile, services, service areas and team." />
       <div className="flex flex-wrap gap-2">
         <Badge tone={org.status === "approved" ? "success" : "warning"}>{org.status === "pending_review" ? "Pending Review" : org.status}</Badge>
-        <Badge tone={org.verification === "verified" ? "purple" : "neutral"}>
-          {org.verification === "verified" ? "Verified" : "Not verified"}
-        </Badge>
+        <Badge tone={docsVerified ? "purple" : "neutral"}>{docsVerified ? "Verified documents" : "Documents not verified"}</Badge>
         <Badge>Your role: {current.role}</Badge>
       </div>
       {canEdit ? (

@@ -13,6 +13,7 @@ import { deleteOrganization, restoreOrganization, reviewDocument, saveFollowup, 
 import { requireAdmin } from "@/modules/auth/session";
 import { ReliabilityView, type Reliability } from "@/modules/provider/reliability-view";
 import { docKindLabel } from "@/modules/provider/labels";
+import { DocsChecklist } from "@/modules/provider/docs-status";
 import { date, dateTime, money, toneFor } from "@/modules/format";
 
 export const metadata: Metadata = { title: "Organization" };
@@ -202,6 +203,7 @@ export default async function OrganizationAdminPage({
           </Card>
           <Card className="grid gap-3 text-sm">
             <h3 className="text-base font-semibold">Professional documents</h3>
+            <DocsChecklist docs={docs} />
             {!docs.length ? <p className="text-muted">No documents uploaded.</p> : null}
             {docs.map((d) => (
               <form key={d.id} action={reviewDocument} className="grid gap-2 rounded-lg border border-border p-3">
@@ -212,7 +214,10 @@ export default async function OrganizationAdminPage({
                     <span className="font-medium">{docKindLabel[d.kind]}</span>
                     <span className="text-muted"> · {[d.number, d.issuer, d.expires_on ? `expires ${date(d.expires_on)}` : "no expiration"].filter(Boolean).join(" · ")}</span>
                   </span>
-                  <Badge tone={d.status === "verified" ? "success" : d.status === "rejected" ? "danger" : "warning"}>{d.status === "submitted" ? "to review" : d.status}</Badge>
+                  <span className="flex gap-1">
+                    {d.expires_on && d.expires_on < new Date().toISOString().slice(0, 10) ? <Badge tone="danger">Expired</Badge> : null}
+                    <Badge tone={d.status === "verified" ? "success" : d.status === "rejected" ? "danger" : "warning"}>{d.status === "submitted" ? "to review" : d.status}</Badge>
+                  </span>
                 </div>
                 {d.file_path && docUrl.get(d.file_path) ? (
                   <a href={docUrl.get(d.file_path)!} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Open file</a>
@@ -221,7 +226,9 @@ export default async function OrganizationAdminPage({
                 )}
                 <div className="flex flex-wrap gap-2">
                   <Input name="note" placeholder="Review note (optional)" aria-label="Review note" maxLength={500} defaultValue={d.review_note ?? ""} className="h-9 min-w-48 flex-1" />
-                  <Button size="sm" name="status" value="verified">Verify</Button>
+                  <Button size="sm" name="status" value="verified" disabled={Boolean(d.expires_on && d.expires_on < new Date().toISOString().slice(0, 10))}>
+                    Verify
+                  </Button>
                   <Button size="sm" variant="secondary" name="status" value="rejected">Reject</Button>
                 </div>
               </form>

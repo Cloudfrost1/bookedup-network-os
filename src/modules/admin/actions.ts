@@ -263,7 +263,7 @@ export async function reviewDocument(formData: FormData) {
     p_note: String(formData.get("note") ?? "").trim().slice(0, 500) || null,
   });
   revalidatePath("/admin", "layout");
-  redirect(back(`/admin/organizations/${org}`, error ? "Could not review the document." : "Document reviewed.", !error));
+  redirect(back(`/admin/organizations/${org}`, error ? error.message : "Document reviewed.", !error));
 }
 
 export async function recordFeedback(formData: FormData) {

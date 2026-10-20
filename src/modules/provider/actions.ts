@@ -67,6 +67,9 @@ export async function addDocument(_: FormState, formData: FormData): Promise<For
     });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const d = parsed.data;
+  if (d.expires && d.expires < new Date().toISOString().slice(0, 10)) {
+    return { error: "This document is already expired. Upload the current one (check the expiration year)." };
+  }
   const file = formData.get("file");
   const supabase = await createClient();
   let path: string | null = null;

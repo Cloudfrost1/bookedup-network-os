@@ -6,6 +6,7 @@ import { requireOrg } from "@/modules/network/org";
 import { date } from "@/modules/format";
 import { docKindLabel } from "@/modules/provider/labels";
 import { CapacityForm, DocumentForm } from "./forms";
+import { DocsChecklist } from "@/modules/provider/docs-status";
 
 export const metadata: Metadata = { title: "Capacity & Documents" };
 
@@ -47,6 +48,7 @@ export default async function CapacityPage() {
             The &quot;Verified documents&quot; mark appears only after BookedUp checks a valid license <em>and</em> a valid insurance. Signing up alone never gives a badge.
           </p>
         </div>
+        <DocsChecklist docs={(docs ?? []) as Doc[]} />
         {(docs ?? []).length ? (
           <ul className="divide-y divide-border text-sm">
             {(docs as Doc[]).map((d) => {
