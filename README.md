@@ -10,8 +10,12 @@ B2B platform for the BookedUp network of home-service businesses in Orlando–Ki
 | Phase | Scope | State |
 |---|---|---|
 | 1 · Foundation | Design tokens, layout, auth, organizations, members, capabilities, RLS, audit log | Done |
-| 2 · Network | 3-step signup, services, service areas, directory | Next |
-| 3–6 | Referrals, distribution, management, Growth | Planned |
+| 2 · Network | Business onboarding with services and cities, public/private directory, coverage page, connections, team | Done |
+| 3 · Referrals | Direct referral with partner attestation, homeowner link `/r/[code]` with versioned consent, admin consent confirmation, 7-point qualification, duplicate check | Done |
+| 4 · Distribution | Rule-based suggestions, one active provider per referral, accept/decline, contact reveal after accept (audited), pipeline | Done |
+| 5 · Management | Admin overview with Action Required, organizations + follow-up, rankings, regional coverage, relationships, reports | Done |
+| 6 · Growth | Growth contracts (target in 90 days), automatic delivery counting, delivery audit, offer text gated by approval | Done |
+| 7 · Billing | Tables only (plans, subscriptions, entitlements, usage limits, billing events). No checkout. | Schema only |
 
 ## Run locally
 
@@ -39,7 +43,7 @@ where id = (select id from auth.users where email = 'you@example.com');
 
 After that, super admins promote other admins with `super_admin_set_platform_role`; nobody can change their own role.
 
-## Security model (Phase 1)
+## Security model
 
 - Row Level Security on every private table. Members see only their own organization; admins see all.
 - Status, verification and capabilities change only through admin RPCs that re-check the role in the database.
@@ -51,5 +55,15 @@ After that, super admins promote other admins with `super_admin_set_platform_rol
 ## Tests
 
 ```bash
-psql "$DATABASE_URL" -f supabase/tests/rls_foundation.sql   # cross-access tests, rolls back, expects "ALL PASSED"
+psql "$DATABASE_URL" -f supabase/tests/rls_foundation.sql    # cross-access tests, rolls back, expects "ALL PASSED"
+psql "$DATABASE_URL" -f supabase/tests/flow_end_to_end.sql   # signup → approval → referral → consent → qualify → match → accept → pipeline → Growth → scores
 ```
+
+Both suites pass against the production database (run inside a transaction and rolled back).
+
+## Known limits of this MVP
+
+- No e-mail or SMS notifications yet: notifications are in-app (bell pages). Supabase sends only auth e-mails.
+- Team members are added by e-mail only if they already have an account; removing a member is done by BookedUp.
+- Scores are recalculated from Admin → Rankings → "Recalculate now".
+- Privacy Policy, Terms and the consent texts are drafts pending legal review.

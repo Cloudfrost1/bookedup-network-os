@@ -9,8 +9,14 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
           <Logo />
           <nav className="flex items-center gap-1 sm:gap-2" aria-label="Main">
-            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
               <Link href="/how-it-works">How it works</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
+              <Link href="/directory">Directory</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
+              <Link href="/services">Services</Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
               <Link href="/login">Sign in</Link>
@@ -25,7 +31,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <footer className="border-t border-border bg-surface">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
           <span>© {new Date().getFullYear()} BookedUp · Orlando, Florida</span>
-          <nav className="flex gap-4" aria-label="Legal">
+          <nav className="flex flex-wrap gap-x-4 gap-y-2" aria-label="Legal">
+            <Link href="/directory" className="hover:text-foreground">Directory</Link>
+            <Link href="/services" className="hover:text-foreground">Services</Link>
             <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
             <Link href="/terms" className="hover:text-foreground">Terms</Link>
           </nav>

@@ -9,9 +9,13 @@ import {
   Trophy,
   Users,
   CheckSquare,
-  Network,
   BarChart3,
   Settings,
+  Bell,
+  Map as MapIcon,
+  Rocket,
+  Medal,
+  Link2,
 } from "lucide-react";
 
 export type NavItem = {
@@ -24,7 +28,7 @@ export type NavItem = {
   phase: number;
 };
 
-export const CURRENT_PHASE = 1;
+export const CURRENT_PHASE = 6;
 
 export const appNav: NavItem[] = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard, phase: 1 },
@@ -34,6 +38,7 @@ export const appNav: NavItem[] = [
   { href: "/app/partners", label: "Find Partners", icon: Users, needs: "approved", phase: 2 },
   { href: "/app/ranking", label: "My Ranking", icon: Trophy, needs: "approved", phase: 5 },
   { href: "/app/business", label: "My Business", icon: Building2, phase: 1 },
+  { href: "/app/notifications", label: "Notifications", icon: Bell, phase: 3 },
   { href: "/app/support", label: "Support", icon: LifeBuoy, phase: 1 },
 ];
 
@@ -42,8 +47,12 @@ export const adminNav: NavItem[] = [
   { href: "/admin/approvals", label: "Pending Approvals", icon: CheckSquare, phase: 1 },
   { href: "/admin/organizations", label: "Organizations", icon: Building2, phase: 2 },
   { href: "/admin/referrals", label: "Referrals", icon: ClipboardList, phase: 3 },
-  { href: "/admin/matching", label: "Matching", icon: Network, phase: 4 },
+  { href: "/admin/growth", label: "Growth Clients", icon: Rocket, phase: 6 },
+  { href: "/admin/rankings", label: "Rankings", icon: Medal, phase: 5 },
+  { href: "/admin/coverage", label: "Regional Coverage", icon: MapIcon, phase: 5 },
+  { href: "/admin/relationships", label: "Relationships", icon: Link2, phase: 5 },
   { href: "/admin/reports", label: "Reports", icon: BarChart3, phase: 5 },
+  { href: "/admin/notifications", label: "Notifications", icon: Bell, phase: 3 },
   { href: "/admin/settings", label: "Settings", icon: Settings, phase: 5 },
 ];
 
