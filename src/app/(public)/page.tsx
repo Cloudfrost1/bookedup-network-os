@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ArrowRight, BadgeCheck, Handshake, Lock, MapPin, Send, ShieldCheck, UserRound } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: { absolute: "BookedUp Partner Circle · Free Local Referral Network · Orlando, FL" },
+  title: { absolute: "BookedUp Network · Free Local Referral Network · Orlando, FL" },
   description:
     "A free network of local home-service businesses in Central Florida. Refer work you don't do. Be considered for work you do. No fees, no exclusivity, no quotas.",
 };

@@ -14,8 +14,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <Check className="size-5" strokeWidth={3} />
             </span>
             <span>
-              <b>BookedUp</b>
-              <small>PARTNER CIRCLE</small>
+              <b>
+                BookedUp <span className="text-[var(--accent-glow)]">Network</span>
+              </b>
+              <small>LOCAL REFERRAL NETWORK</small>
             </span>
           </Link>
           <nav className="center" aria-label="Sections">
@@ -36,7 +38,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <div className="grid content-start gap-3">
             <span className="flex items-center gap-2 font-extrabold tracking-wide">
               <span aria-hidden className="grid size-7 place-items-center rounded-lg bg-[var(--accent)] font-mono text-sm text-white">B</span>
-              BOOKEDUP PARTNER CIRCLE
+              BOOKEDUP NETWORK
             </span>
             <p className="m-0 font-bold">Better connections. Better service. Stronger local businesses.</p>
             <p className="m-0 text-sm text-[rgba(247,244,254,.65)]">A local referral initiative by BookedUp.</p>
