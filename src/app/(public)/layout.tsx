@@ -1,41 +1,37 @@
 import Link from "next/link";
-import { Logo } from "@/components/brand";
-import { Button } from "@/components/ui/button";
+import "@fontsource-variable/manrope";
+import "@fontsource/fira-code/700.css";
+import "./public.css";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-          <Logo />
-          <nav className="flex items-center gap-1 sm:gap-2" aria-label="Main">
-            <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
-              <Link href="/how-it-works">How it works</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
-              <Link href="/directory">Directory</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
-              <Link href="/services">Services</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/signup">Join the Network</Link>
-            </Button>
+    <div className="pub flex min-h-dvh flex-col">
+      <div className="px-4">
+        <header className="pub-nav" aria-label="Main">
+          <Link href="/" className="pub-logo">
+            <i aria-hidden>B</i>
+            <span>
+              BookedUp<em> Network</em>
+            </span>
+          </Link>
+          <nav className="links">
+            <Link href="/how-it-works" className="link">How it works</Link>
+            <Link href="/directory" className="link">Directory</Link>
+            <Link href="/services" className="link">Services</Link>
+            <Link href="/login" className="link !inline-block">Sign in</Link>
+            <Link href="/signup" className="pub-btn sm">Join the Network</Link>
           </nav>
-        </div>
-      </header>
+        </header>
+      </div>
       <main className="flex-1">{children}</main>
-      <footer className="border-t border-border bg-surface">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
+      <footer className="pub-footer mt-16">
+        <div className="wrap flex flex-col gap-3 py-10 text-sm sm:flex-row sm:items-center sm:justify-between">
           <span>© {new Date().getFullYear()} BookedUp · Orlando, Florida</span>
-          <nav className="flex flex-wrap gap-x-4 gap-y-2" aria-label="Legal">
-            <Link href="/directory" className="hover:text-foreground">Directory</Link>
-            <Link href="/services" className="hover:text-foreground">Services</Link>
-            <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
-            <Link href="/terms" className="hover:text-foreground">Terms</Link>
+          <nav className="flex flex-wrap gap-x-5 gap-y-2" aria-label="Legal">
+            <Link href="/directory">Directory</Link>
+            <Link href="/services">Services</Link>
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/terms">Terms</Link>
           </nav>
         </div>
       </footer>
