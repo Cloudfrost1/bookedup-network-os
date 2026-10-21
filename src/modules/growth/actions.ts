@@ -12,11 +12,11 @@ export async function requestGrowthReview(_: FormState, formData: FormData): Pro
   const org = z.string().uuid().safeParse(formData.get("orgId"));
   if (!org.success) return { error: "Invalid business." };
   const phone = String(formData.get("phone") ?? "").trim().slice(0, 32);
-  if (phone && !/^[0-9()+\-\s.]{7,32}$/.test(phone)) return { error: "Enter a valid phone number." };
+  if (!/^[0-9()+\-\s.]{7,32}$/.test(phone)) return { error: "Enter the best phone number to reach you." };
   const supabase = await createClient();
   const { error } = await supabase.rpc("request_growth_review", {
     p_org: org.data,
-    p_phone: phone || null,
+    p_phone: phone,
     p_best_time: String(formData.get("bestTime") ?? "").trim().slice(0, 120) || null,
     p_message: String(formData.get("message") ?? "").trim().slice(0, 2000) || null,
   });

@@ -7,7 +7,7 @@ import { Field, FormMessage, Input } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/inputs";
 import { SubmitButton } from "@/components/ui/submit-button";
 
-export function GrowthReviewForm({ orgId, phone }: { orgId: string; phone: string | null }) {
+export function GrowthReviewForm({ orgId }: { orgId: string }) {
   const [state, action] = useActionState<FormState, FormData>(requestGrowthReview, {});
   if (state.success) return <FormMessage tone="success">{state.success}</FormMessage>;
   return (
@@ -16,7 +16,7 @@ export function GrowthReviewForm({ orgId, phone }: { orgId: string; phone: strin
       <FormMessage>{state.error}</FormMessage>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="gr-phone" label="Best phone to reach you">
-          <Input id="gr-phone" name="phone" type="tel" inputMode="tel" defaultValue={phone ?? ""} />
+          <Input id="gr-phone" name="phone" type="tel" inputMode="tel" autoComplete="off" required placeholder="(407) 555-0123" />
         </Field>
         <Field id="gr-time" label="Best time to talk (optional)">
           <Input id="gr-time" name="bestTime" placeholder="e.g. weekday mornings" maxLength={120} />

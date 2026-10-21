@@ -27,12 +27,11 @@ const REVIEW_STATUS: Record<string, string> = {
 export default async function ProviderGrowthPage() {
   const { org } = await requireOrg("/provider/growth");
   const supabase = await createClient();
-  const [standing, { data: programs }, { data: deliveries }, { data: reviews }, { data: orgRow }] = await Promise.all([
+  const [standing, { data: programs }, { data: deliveries }, { data: reviews }] = await Promise.all([
     getStanding(org.id),
     supabase.rpc("my_growth_program", { p_org: org.id }),
     supabase.rpc("my_growth_deliveries", { p_org: org.id }),
     supabase.from("growth_review_requests").select("id, status, created_at").eq("org_id", org.id).order("created_at", { ascending: false }).limit(1),
-    supabase.from("organizations").select("phone").eq("id", org.id).maybeSingle(),
   ]);
   const program = ((programs ?? []) as GrowthProgress[])[0];
   const list = (deliveries ?? []) as Delivery[];
@@ -99,7 +98,7 @@ export default async function ProviderGrowthPage() {
           ) : canRequest ? (
             <div id="review" className="grid gap-3 border-t-2 border-dashed border-border pt-4">
               <h3 className="text-base">Schedule a Growth Review</h3>
-              <GrowthReviewForm orgId={org.id} phone={orgRow?.phone ?? null} />
+              <GrowthReviewForm orgId={org.id} />
             </div>
           ) : (
             <p className="m-0 text-sm text-muted">Ask an owner or manager of your business to schedule a Growth Review.</p>
