@@ -35,7 +35,7 @@ export function ServicesForm({
 }) {
   const [state, action] = useActionState<FormState, FormData>(saveServices, {});
   return (
-    <form action={action} className="grid gap-5 rounded-xl border border-border bg-background p-5 sm:p-6">
+    <form action={action} className="grid gap-5 rounded-[20px] border-2 border-line bg-background shadow-hard p-5 sm:p-6">
       <h2 className="text-lg font-semibold">{receives ? "Services and service areas" : "Services and referrals"}</h2>
       <input type="hidden" name="orgId" value={orgId} />
       <FormMessage>{state.error}</FormMessage>

@@ -29,7 +29,7 @@ export function ThemeToggle({ initial }: { initial: Theme }) {
     <button
       type="button"
       onClick={() => apply(next)}
-      className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-subtle"
+      className="flex w-full items-center gap-3 rounded-full px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-subtle"
       aria-label={`Switch to ${next} mode`}
     >
       {theme === "dark" ? <Sun aria-hidden className="size-4" /> : <Moon aria-hidden className="size-4" />}

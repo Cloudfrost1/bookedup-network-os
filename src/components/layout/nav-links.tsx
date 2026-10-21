@@ -16,7 +16,7 @@ function isActive(path: string, href: string) {
 export function NavLinks({ links, onNavigate }: { links: LinkItem[]; onNavigate?: () => void }) {
   const path = usePathname();
   return (
-    <nav className="grid flex-1 content-start gap-0.5 overflow-y-auto px-3" aria-label="Sections">
+    <nav className="grid flex-1 content-start gap-1 overflow-y-auto px-3 py-1" aria-label="Sections">
       {links.map((l) => {
         const active = isActive(path, l.href);
         return (
@@ -26,8 +26,10 @@ export function NavLinks({ links, onNavigate }: { links: LinkItem[]; onNavigate?
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm",
-              active ? "bg-primary-soft font-medium text-primary-deep" : "text-ink-soft hover:bg-subtle",
+              "flex items-center gap-3 rounded-full border-2 px-3 py-2 text-sm font-semibold transition-colors",
+              active
+                ? "border-[#17120d] bg-primary text-white shadow-[2px_3px_0_#000]"
+                : "border-transparent text-ink-soft hover:bg-subtle hover:text-foreground",
             )}
           >
             {l.icon}
@@ -63,13 +65,13 @@ export function MobileNav({
   }, [open]);
 
   return (
-    <div className="lg:hidden">
-      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background px-4">
+    <div className="lg:hidden" data-theme="dark">
+      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b-2 border-[#17120d] bg-[#1b1815] px-4 text-foreground">
         <Logo href={homeHref} />
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="grid size-10 place-items-center rounded-lg hover:bg-subtle"
+          className="grid size-10 place-items-center rounded-full hover:bg-subtle"
           aria-label="Open menu"
           aria-expanded={open}
         >
@@ -78,10 +80,10 @@ export function MobileNav({
       </div>
       {open ? (
         <div className="fixed inset-0 z-40" role="dialog" aria-modal="true" aria-label={title}>
-          <button className="absolute inset-0 bg-ink/40" aria-label="Close menu" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-[min(85vw,300px)] flex-col bg-background shadow-xl">
+          <button className="absolute inset-0 bg-black/50" aria-label="Close menu" onClick={() => setOpen(false)} />
+          <div className="absolute inset-y-0 left-0 flex w-[min(85vw,300px)] flex-col border-r-2 border-[#17120d] bg-[#1b1815] text-foreground shadow-xl">
             <div className="flex items-center justify-between px-4 py-4">
-              <span className="text-sm font-medium">{title}</span>
+              <span className="font-mono text-[11px] font-bold uppercase tracking-[1.5px] text-[#a78bfa]">{title}</span>
               <button className="grid size-10 place-items-center rounded-lg hover:bg-subtle" aria-label="Close menu" onClick={() => setOpen(false)}>
                 <X aria-hidden className="size-5" />
               </button>

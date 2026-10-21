@@ -16,7 +16,7 @@ export function HomeownerForm({ code, consentVersion, consentText, categories }:
   const [state, action] = useActionState<FormState, FormData>(submitPublicReferral, {});
   if (state.success) {
     return (
-      <div className="grid justify-items-start gap-3 rounded-xl border border-border bg-background p-6">
+      <div className="grid justify-items-start gap-3 rounded-[20px] border-2 border-line bg-background shadow-hard p-6">
         <CheckCircle2 aria-hidden className="size-8 text-primary" />
         <p className="text-lg font-semibold">Request received</p>
         <p className="text-muted">{state.success}</p>
@@ -24,7 +24,7 @@ export function HomeownerForm({ code, consentVersion, consentText, categories }:
     );
   }
   return (
-    <form action={action} className="grid gap-5 rounded-xl border border-border bg-background p-5 sm:p-6" noValidate>
+    <form action={action} className="grid gap-5 rounded-[20px] border-2 border-line bg-background shadow-hard p-5 sm:p-6" noValidate>
       <input type="hidden" name="code" value={code} />
       <input type="hidden" name="consentVersion" value={consentVersion} />
       <div aria-hidden className="absolute -left-[9999px]">

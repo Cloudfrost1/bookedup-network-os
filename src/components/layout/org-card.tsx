@@ -17,7 +17,7 @@ export function OrgCard({ org, env, standing }: { org: OrgAccess; env: "partner"
           : { text: "Referral partner · Inactive", tone: "danger" };
   }
   return (
-    <div className="grid gap-1.5 rounded-lg border border-border px-3 py-2">
+    <div className="grid gap-1.5 rounded-2xl border-2 border-line bg-background px-3 py-2.5">
       <span className="truncate text-sm font-medium">{org.name}</span>
       <span className="flex flex-wrap items-center gap-1">
         <Badge tone={org.status === "approved" ? "success" : org.status === "pending_review" ? "warning" : "danger"}>{member}</Badge>

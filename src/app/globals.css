@@ -1,21 +1,26 @@
 @import "tailwindcss";
 
-/* BookedUp design tokens — purple, white, black. No blue. */
+/* BookedUp design tokens — same neo-brutalist look as the public site: cream grid paper, ink borders,
+   hard offset shadows, purple accent. No blue. */
 :root {
   --purple-600: #7c3aed; /* Primary Purple */
   --purple-800: #5b21b6; /* Dark Purple */
   --purple-100: #ede9fe; /* Light Purple */
   --purple-950: #2e1065; /* Deep Purple */
-  --white: #ffffff;
-  --off-white: #fafafa;
-  --black: #09090b;
-  --gray-800: #27272a;
-  --gray-100: #f4f4f5;
-  --gray-200: #e4e4e7;
-  --gray-500: #71717a;
+  --white: #fffefa;
+  --off-white: #fcf7e3;
+  --black: #17120d;
+  --gray-800: #3d352b;
+  --gray-100: #f3ecd6;
+  --gray-200: #e3d9bf;
+  --gray-500: #6b6055;
 
   --background: var(--white);
   --surface: var(--off-white);
+  --line: #17120d;
+  --hard: 4px 5px 0 var(--line);
+  --hard-sm: 2px 3px 0 var(--line);
+  --grid: rgba(23, 18, 13, 0.05);
   --foreground: var(--black);
   --muted: var(--gray-500);
   --border: var(--gray-200);
@@ -38,14 +43,17 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
   --color-primary-deep: var(--primary-deep);
+  --color-line: var(--line);
+  --shadow-hard: var(--hard);
+  --shadow-hard-sm: var(--hard-sm);
   --color-ink: var(--black);
   --color-ink-soft: var(--gray-800);
   --color-subtle: var(--gray-100);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Fira Code", ui-monospace, monospace;
 }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -53,7 +61,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  font-feature-settings: "cv11", "ss01";
+  font-weight: 500;
 }
 h1, h2, h3 { text-wrap: balance; letter-spacing: -0.02em; }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
@@ -74,6 +82,10 @@ h1, h2, h3 { text-wrap: balance; letter-spacing: -0.02em; }
   --primary: #8b5cf6;
   --primary-hover: #7c3aed;
   --primary-soft: #2a1f47;
+  --line: #4a4458;
+  --hard: 4px 5px 0 #000;
+  --hard-sm: 2px 3px 0 #000;
+  --grid: rgba(255, 255, 255, 0.03);
   --primary-deep: #ddd6fe;
   --success: #4ade80;
   --warning: #facc15;
@@ -85,3 +97,12 @@ h1, h2, h3 { text-wrap: balance; letter-spacing: -0.02em; }
 
 /* never allow horizontal page scroll on mobile */
 html, body { overflow-x: clip; max-width: 100%; }
+
+/* Platform shell: grid paper behind the content, bold headings like the public site. */
+.app-grid {
+  background-color: var(--surface);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+[data-theme-root] h1, [data-theme-root] h2, [data-theme-root] h3 { font-weight: 800; letter-spacing: -0.02em; }
+[data-theme-root] h1 { letter-spacing: -0.03em; }

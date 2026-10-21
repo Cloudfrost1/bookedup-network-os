@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const base =
-  "w-full min-w-0 rounded-lg border border-border bg-background px-3 text-base text-foreground sm:text-sm focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20";
+  "w-full min-w-0 rounded-xl border-2 border-line bg-background px-3 text-base font-medium text-foreground sm:text-sm focus-visible:border-primary focus-visible:shadow-hard-sm focus-visible:outline-none";
 
 export function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return <select className={cn(base, "h-11", className)} {...props} />;
@@ -24,12 +24,12 @@ export function Checkbox({ label, className, ...props }: React.InputHTMLAttribut
 /** Horizontally scrollable table wrapper so wide tables never break the page on phones. */
 export function Table({ head, children }: { head: React.ReactNode[]; children: React.ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-background">
+    <div className="overflow-x-auto rounded-[20px] border-2 border-line bg-background shadow-hard">
       <table className="w-full min-w-[640px] text-left text-sm">
-        <thead className="border-b border-border bg-surface text-xs uppercase tracking-wide text-muted">
+        <thead className="border-b-2 border-line bg-surface font-mono text-[11px] uppercase tracking-wider text-muted">
           <tr>
             {head.map((h, i) => (
-              <th key={i} className="px-4 py-3 font-medium">
+              <th key={i} className="px-4 py-3 font-bold">
                 {h}
               </th>
             ))}

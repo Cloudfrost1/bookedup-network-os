@@ -13,7 +13,7 @@ export function ReferralForm({ orgId, categories, provider }: { orgId: string; c
   const [state, action] = useActionState<FormState, FormData>(submitReferral, {});
   const f = state.fields ?? {};
   return (
-    <form action={action} className="grid max-w-3xl gap-5 rounded-xl border border-border bg-background p-5 sm:p-6" noValidate>
+    <form action={action} className="grid max-w-3xl gap-5 rounded-[20px] border-2 border-line bg-background shadow-hard p-5 sm:p-6" noValidate>
       <input type="hidden" name="orgId" value={orgId} />
       {provider ? (
         <>

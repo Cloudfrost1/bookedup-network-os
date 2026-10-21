@@ -7,8 +7,8 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
     <input
       ref={ref}
       className={cn(
-        "h-11 w-full min-w-0 rounded-lg border border-border bg-background px-3 text-base text-foreground placeholder:text-muted sm:text-sm",
-        "focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+        "h-11 w-full min-w-0 rounded-xl border-2 border-line bg-background px-3 text-base font-medium text-foreground placeholder:text-muted sm:text-sm",
+        "focus-visible:border-primary focus-visible:shadow-hard-sm focus-visible:outline-none",
         "aria-[invalid=true]:border-danger disabled:cursor-not-allowed disabled:bg-subtle",
         className,
       )}
@@ -22,7 +22,7 @@ export const Label = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
 >(({ className, ...props }, ref) => (
-  <LabelPrimitive.Root ref={ref} className={cn("text-sm font-medium text-foreground", className)} {...props} />
+  <LabelPrimitive.Root ref={ref} className={cn("text-sm font-bold text-foreground", className)} {...props} />
 ));
 Label.displayName = "Label";
 
@@ -60,7 +60,7 @@ export function FormMessage({ tone = "error", children }: { tone?: "error" | "su
     <div
       role={tone === "error" ? "alert" : "status"}
       className={cn(
-        "rounded-lg border px-3 py-2.5 text-sm",
+        "rounded-xl border-2 px-4 py-3 text-sm font-semibold",
         tone === "error" ? "border-danger/30 bg-danger/5 text-danger" : "border-success/30 bg-success/5 text-success",
       )}
     >

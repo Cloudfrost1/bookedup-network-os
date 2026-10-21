@@ -22,7 +22,7 @@ type Org = {
 export function BusinessForm({ org }: { org: Org }) {
   const [state, action] = useActionState<FormState, FormData>(updateOrganization, {});
   return (
-    <form action={action} className="grid gap-5 rounded-xl border border-border bg-background p-5 sm:p-6" noValidate>
+    <form action={action} className="grid gap-5 rounded-[20px] border-2 border-line bg-background shadow-hard p-5 sm:p-6" noValidate>
       <input type="hidden" name="orgId" value={org.id} />
       <FormMessage>{state.error}</FormMessage>
       <FormMessage tone="success">{state.success}</FormMessage>
