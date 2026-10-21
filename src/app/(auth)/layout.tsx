@@ -30,7 +30,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
       <div className="grid flex-1 items-start justify-items-center px-4 pt-8 pb-12 sm:items-center sm:py-16">
         <div className="grid w-full max-w-md gap-6">
-          <main className="pub-auth-card">{children}</main>
+          <main className="pub-auth-card pub-form">{children}</main>
           <p className="m-0 text-center font-mono text-[11px] font-bold tracking-[1.5px] text-[var(--ink-mute)]">
             FREE TO JOIN · NO EXCLUSIVITY · NO QUOTAS
           </p>

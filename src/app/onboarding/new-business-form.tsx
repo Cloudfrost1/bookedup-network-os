@@ -20,9 +20,9 @@ const list = (v?: string) => (v ? v.split(",").filter(Boolean) : []);
 
 function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
-    <section className="grid gap-5 rounded-xl border border-border bg-background p-5 sm:p-6">
-      <h2 className="flex items-center gap-3 text-lg font-semibold">
-        <span className="grid size-7 place-items-center rounded-full bg-primary text-sm text-white">{n}</span>
+    <section className="pub-auth-card pub-step">
+      <h2 className="flex items-center gap-3">
+        <span className="pub-step-n">{n}</span>
         {title}
       </h2>
       {children}
@@ -35,11 +35,13 @@ export function NewBusinessForm({ categories, regions }: { categories: Category[
   const f = state.fields ?? {};
   return (
     <div className="grid max-w-3xl gap-6">
-      <div className="grid gap-1">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Add your business</h1>
-        <p className="text-sm text-muted">BookedUp reviews every business before it can send or receive projects.</p>
+      <div className="pub-page-head grid gap-2">
+        <h1>
+          Add your <span className="hl">business</span>
+        </h1>
+        <p className="m-0">BookedUp reviews every business before it can send or receive projects.</p>
       </div>
-      <form action={action} className="grid gap-5" noValidate>
+      <form action={action} className="pub-form grid gap-6" noValidate>
         <FormMessage>{state.error}</FormMessage>
         <Step n={1} title="Your business">
           <fieldset className="grid gap-3">
@@ -48,7 +50,7 @@ export function NewBusinessForm({ categories, regions }: { categories: Category[
               {modes.map((m) => (
                 <label
                   key={m.value}
-                  className="grid cursor-pointer gap-1 rounded-lg border border-border p-3 has-[:checked]:border-primary has-[:checked]:bg-primary-soft"
+                  className="grid cursor-pointer gap-1 rounded-xl border-2 border-[var(--ink)] bg-white p-3 has-[:checked]:bg-[var(--accent-tint)] has-[:checked]:shadow-[3px_4px_0_var(--ink)]"
                 >
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <input type="radio" name="mode" value={m.value} defaultChecked={(f.mode || "both") === m.value} className="accent-[var(--primary)]" />
@@ -78,7 +80,7 @@ export function NewBusinessForm({ categories, regions }: { categories: Category[
             </Select>
           </Field>
         </Step>
-        <SubmitButton size="lg" pendingText="Submitting…" className="justify-self-start">
+        <SubmitButton size="lg" pendingText="Submitting…" className="w-full sm:w-auto sm:justify-self-start sm:px-10">
           Submit for review
         </SubmitButton>
       </form>

@@ -1,18 +1,35 @@
-import { Logo } from "@/components/brand";
+import Link from "next/link";
+import { Check, LogOut } from "lucide-react";
 import { signOut } from "@/modules/auth/actions";
+import "@fontsource-variable/manrope";
+import "@fontsource/fira-code/700.css";
+import "../(public)/public.css";
 
+/** First-run onboarding (after sign up) — same look as the homepage and auth pages. */
 export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh bg-surface">
-      <header className="border-b border-border bg-background">
-        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4">
-          <Logo href="/" />
-          <form action={signOut}>
-            <button className="text-sm text-muted hover:text-foreground">Sign out</button>
+    <div className="pub pub-auth flex min-h-dvh flex-col">
+      <div className="px-4">
+        <header className="pub-nav" aria-label="Main">
+          <Link href="/" className="pub-nav-brand">
+            <span className="mark" aria-hidden>
+              <Check className="size-5" strokeWidth={3} />
+            </span>
+            <span>
+              <b>
+                BookedUp <span className="text-[var(--accent-glow)]">Network</span>
+              </b>
+              <small>LOCAL REFERRAL NETWORK</small>
+            </span>
+          </Link>
+          <form action={signOut} className="links">
+            <button className="link pub-signout !inline-flex items-center gap-1.5">
+              <LogOut aria-hidden className="size-4" /> Sign out
+            </button>
           </form>
-        </div>
-      </header>
-      <main className="mx-auto max-w-3xl px-4 py-8">{children}</main>
+        </header>
+      </div>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-10 pb-16">{children}</main>
     </div>
   );
 }
