@@ -84,7 +84,9 @@ export function ProviderJourney({ stage }: { stage: Stage }) {
             </Link>
           </Button>
           <Button asChild size="sm" variant="secondary">
-            <Link href="/provider/growth">See if Growth fits your business</Link>
+            <a href="https://bookedup.prospeny.com/" target="_blank" rel="noopener noreferrer">
+              See if Growth fits your business
+            </a>
           </Button>
         </div>
       ) : null}
