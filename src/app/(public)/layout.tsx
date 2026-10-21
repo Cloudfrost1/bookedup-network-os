@@ -27,7 +27,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           </nav>
           <nav className="links" aria-label="Account">
             <Link href="/login" className="link !inline-block">Sign in</Link>
-            <Link href="/signup" className="pub-btn sm">Become a Free Partner →</Link>
+            <Link href="/signup" className="pub-btn sm">
+              <span className="pub-cta-long">Become a Free Partner →</span>
+              <span className="pub-cta-short">Join free →</span>
+            </Link>
           </nav>
         </header>
       </div>

@@ -82,3 +82,6 @@ h1, h2, h3 { text-wrap: balance; letter-spacing: -0.02em; }
 }
 [data-theme="dark"] .bg-ink { background-color: #2e2b37; }
 [data-theme="dark"] ::placeholder { color: #71717a; }
+
+/* never allow horizontal page scroll on mobile */
+html, body { overflow-x: clip; max-width: 100%; }
