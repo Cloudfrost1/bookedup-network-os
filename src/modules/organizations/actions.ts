@@ -11,7 +11,7 @@ const optional = (max: number) => z.string().trim().max(max).optional().transfor
 const businessSchema = z.object({
   name: z.string().trim().min(2, "Enter the business name.").max(120),
   email: z.string().trim().toLowerCase().email("Enter a valid business email.").max(254),
-  phone: z.string().trim().regex(/^[0-9()+\-\s.]{7,32}$/, "Enter a valid business phone.").or(z.literal("")).transform((v) => v || null),
+  phone: z.string().trim().regex(/^[0-9()+\-\s.]{7,32}$/, "Enter a valid business phone."),
   website: optional(300),
   state: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/, "Use the 2-letter state code, like FL."),
   city: z.string().trim().min(2, "Enter the city.").max(80),
@@ -24,32 +24,44 @@ const fieldsOf = (fd: FormData) =>
 const uuidList = (fd: FormData, key: string) =>
   fd.getAll(key).map(String).filter((v) => z.string().uuid().safeParse(v).success);
 
+const CONSENTS = ["terms_privacy", "data_use", "referral_authorization", "contact_email", "contact_sms", "contact_whatsapp"] as const;
+
 export async function createOrganization(_: FormState, formData: FormData): Promise<FormState> {
+  const consents = Object.fromEntries(CONSENTS.map((k) => [k, formData.get(k) === "on"])) as Record<(typeof CONSENTS)[number], boolean>;
   const fields: Record<string, string> = {
     ...fieldsOf(formData),
     category: String(formData.get("category") ?? ""),
     offered: uuidList(formData, "offered").join(","),
     notOffered: uuidList(formData, "notOffered").join(","),
     regions: uuidList(formData, "regions").join(","),
+    ...Object.fromEntries(CONSENTS.map((k) => [k, consents[k] ? "on" : ""])),
   };
   const parsed = businessSchema
     .extend({
-      mode: z.enum(["refer", "receive", "both"], { error: "Choose what you would like to do." }),
-      outOfScope: z.enum(["0", "1-2", "3-5", "6+"]).optional(),
+      mode: z.enum(["refer", "receive", "both"], { error: "Choose what you would like to do: refer, receive or both." }),
+      outOfScope: z.enum(["0", "1-2", "3-5", "6+"], { error: "Tell us how many out-of-scope requests you received in the last 30 days." }),
       category: z.string().uuid({ error: "Choose your main service." }),
     })
-    .safeParse({ ...fields, outOfScope: fields.outOfScope || undefined });
+    .safeParse(fields);
   if (!parsed.success) return { error: parsed.error.issues[0].message, fields };
+  const d = parsed.data;
+  const refers = d.mode !== "receive";
 
   const offered = uuidList(formData, "offered");
   const notOffered = uuidList(formData, "notOffered").filter((id) => !offered.includes(id));
   const regions = uuidList(formData, "regions");
-  const d = parsed.data;
-  if (!offered.includes(d.category)) offered.unshift(d.category);
+  if (!offered.length) return { error: "Choose at least one service you offer.", fields };
+  if (refers && !notOffered.length) return { error: "Choose at least one request you usually turn down — these are the projects you can refer.", fields };
   if (!regions.length) return { error: "Choose at least one city you serve.", fields };
+  if (!offered.includes(d.category)) offered.unshift(d.category);
+
+  if (!consents.terms_privacy) return { error: "Accept the Terms of Service and Privacy Policy to continue.", fields };
+  if (!consents.data_use) return { error: "Authorize BookedUp to use your business information to continue.", fields };
+  if (refers && !consents.referral_authorization) return { error: "Confirm you will only refer customers who allowed you to share their details.", fields };
+  if (!consents.contact_email) return { error: "Allow e-mail contact — it is how BookedUp sends project and account updates.", fields };
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("create_organization_v2", {
+  const { error } = await supabase.rpc("create_organization_v3", {
     p_name: d.name,
     p_category: d.category,
     p_email: d.email,
@@ -58,12 +70,13 @@ export async function createOrganization(_: FormState, formData: FormData): Prom
     p_state: d.state,
     p_city: d.city,
     p_zip: d.zip,
-    p_wants_refer: d.mode !== "receive",
+    p_wants_refer: refers,
     p_wants_receive: d.mode !== "refer",
-    p_out_of_scope: d.outOfScope ?? null,
+    p_out_of_scope: d.outOfScope,
     p_offered: offered,
     p_not_offered: notOffered,
     p_regions: regions,
+    p_consents: { ...consents, referral_authorization: refers && consents.referral_authorization },
   });
   if (error) {
     if (error.code === "54000") return { error: "This account already owns the maximum number of businesses.", fields };

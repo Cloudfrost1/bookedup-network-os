@@ -1,5 +1,8 @@
 -- Capacity, full-scope request and reliability. Runs in a transaction and is rolled back.
 begin;
+-- org creation helpers are server-only since 20261021150000; re-grant inside this rolled-back test
+grant execute on function public.create_organization(text, text, text, text, text, text, text, boolean, boolean, public.out_of_scope_bucket) to authenticated;
+grant execute on function public.create_organization_v2(text, uuid, text, text, text, text, text, text, boolean, boolean, public.out_of_scope_bucket, uuid[], uuid[], uuid[]) to authenticated;
 insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, created_at, updated_at) values
  ('30000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'anchor@test.local', '{}', now(), now()),
  ('30000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'pro@test.local', '{}', now(), now()),

@@ -14,7 +14,7 @@ export function BusinessFields({ values = {} }: { values?: Values }) {
           <Input id="email" name="email" type="email" autoComplete="email" required defaultValue={v("email")} />
         </Field>
         <Field id="phone" label="Business phone">
-          <Input id="phone" name="phone" type="tel" autoComplete="tel" inputMode="tel" defaultValue={v("phone")} />
+          <Input id="phone" name="phone" type="tel" autoComplete="tel" inputMode="tel" required defaultValue={v("phone")} />
         </Field>
       </div>
       <Field id="website" label="Website (optional)">

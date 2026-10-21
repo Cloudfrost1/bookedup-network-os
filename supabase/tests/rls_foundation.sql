@@ -1,6 +1,9 @@
 -- Cross-access tests for Phase 1. Runs inside a transaction and rolls back: leaves no data behind.
 -- Run with: psql "$DATABASE_URL" -f supabase/tests/rls_foundation.sql   (expects final row: ALL PASSED)
 begin;
+-- org creation helpers are server-only since 20261021150000; re-grant inside this rolled-back test
+grant execute on function public.create_organization(text, text, text, text, text, text, text, boolean, boolean, public.out_of_scope_bucket) to authenticated;
+grant execute on function public.create_organization_v2(text, uuid, text, text, text, text, text, text, boolean, boolean, public.out_of_scope_bucket, uuid[], uuid[], uuid[]) to authenticated;
 
 -- ---- fixtures (as postgres)
 insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, created_at, updated_at)

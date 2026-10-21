@@ -16,6 +16,15 @@ import { docKindLabel } from "@/modules/provider/labels";
 import { DocsChecklist } from "@/modules/provider/docs-status";
 import { date, dateTime, money, toneFor } from "@/modules/format";
 
+const CONSENT_LABELS = [
+  ["terms_privacy", "Terms of Service and Privacy Policy"],
+  ["data_use", "Use of business data for review and matching"],
+  ["referral_authorization", "Only refers customers who allowed sharing their details"],
+  ["contact_email", "Contact by e-mail"],
+  ["contact_sms", "Contact by SMS"],
+  ["contact_whatsapp", "Contact by WhatsApp"],
+] as const;
+
 export const metadata: Metadata = { title: "Organization" };
 
 type Team = { user_id: string; full_name: string | null; email: string; role: string };
@@ -57,6 +66,13 @@ export default async function OrganizationAdminPage({
   const caps = (org.organization_capabilities ?? []) as { capability: string; status: string }[];
   const isProvider = caps.some((c) => c.capability === "receive");
   type Doc = { id: string; kind: string; number: string | null; issuer: string | null; expires_on: string | null; status: string; file_path: string | null; review_note: string | null };
+  const { data: consentRows } = await supabase
+    .from("organization_consents")
+    .select("kind, granted, version, created_at")
+    .eq("org_id", id)
+    .order("created_at", { ascending: false });
+  const consents = new Map<string, { granted: boolean; version: string; created_at: string }>();
+  for (const c of consentRows ?? []) if (!consents.has(c.kind)) consents.set(c.kind, c);
   const [{ data: capacity }, { data: docRows }, { data: rel }] = isProvider
     ? await Promise.all([
         supabase.from("provider_capacity").select("*").eq("org_id", id).maybeSingle(),
@@ -180,6 +196,33 @@ export default async function OrganizationAdminPage({
           </Card>
         </div>
       </div>
+      <Card className="grid gap-3 text-sm">
+        <h2 className="text-base font-semibold">Consents</h2>
+        {consents.size ? (
+          <ul className="grid gap-1.5">
+            {CONSENT_LABELS.map(([k, label]) => {
+              const c = consents.get(k);
+              return (
+                <li key={k} className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-1.5 last:border-0">
+                  <span>{label}</span>
+                  {c ? (
+                    <span className="flex items-center gap-2">
+                      <Badge tone={c.granted ? "success" : "neutral"}>{c.granted ? "Granted" : "Not granted"}</Badge>
+                      <span className="text-xs text-muted">
+                        {dateTime(c.created_at)} · v{c.version}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted">—</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="text-muted">No consents recorded. This business signed up before consents were collected during onboarding.</p>
+        )}
+      </Card>
       {isProvider ? (
         <section className="grid gap-4">
           <h2 className="text-xl font-semibold">Provider: capacity, documents and reliability</h2>
