@@ -325,3 +325,43 @@ export async function restoreOrganization(formData: FormData) {
   revalidatePath("/", "layout");
   redirect(back(path, error ? "Could not restore." : "Restored. It is back in Pending Approvals.", !error));
 }
+
+/* ---------------------------------------------------------------- commercial stages */
+export async function setProviderTrack(formData: FormData) {
+  await requireAdmin();
+  const org = uuid.parse(formData.get("orgId"));
+  const raw = String(formData.get("track") ?? "");
+  const track = ["trial", "overflow", "paused", "rejected"].includes(raw) ? raw : null;
+  const { error } = await call("admin_set_provider_track", { p_org: org, p_track: track });
+  revalidatePath("/admin", "layout");
+  redirect(back(`/admin/organizations/${org}`, error ? error.message : "Provider status updated.", !error));
+}
+
+export async function setDeliveryValidation(formData: FormData) {
+  await requireAdmin();
+  const id = uuid.parse(formData.get("deliveryId"));
+  const contract = uuid.parse(formData.get("contractId"));
+  const validation = z
+    .enum(["pending_validation", "qualified", "under_dispute", "invalidated", "replacement_required"])
+    .parse(formData.get("validation"));
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("growth_deliveries")
+    .update({
+      validation,
+      excluded: validation === "invalidated",
+      audit_note: String(formData.get("note") ?? "").trim().slice(0, 1000) || null,
+    })
+    .eq("id", id);
+  revalidatePath("/admin/growth", "layout");
+  redirect(back(`/admin/growth/${contract}`, error ? "Could not update the delivery." : "Delivery updated.", !error));
+}
+
+export async function updateGrowthReview(formData: FormData) {
+  await requireAdmin();
+  const id = uuid.parse(formData.get("id"));
+  const status = z.enum(["new", "contacted", "qualified", "not_a_fit", "closed"]).parse(formData.get("status"));
+  const { error } = await call("admin_update_growth_review", { p_id: id, p_status: status, p_notes: String(formData.get("notes") ?? "") });
+  revalidatePath("/admin/growth/requests");
+  redirect(back("/admin/growth/requests", error ? "Could not update." : "Request updated.", !error));
+}

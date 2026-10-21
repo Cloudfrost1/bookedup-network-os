@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 import { firstName, requireUser } from "@/modules/auth/session";
 import { Checklist, ReviewNotice } from "@/modules/shared/checklist";
 import { ReferralLinkCard } from "./referrals/referral-link";
+import { Badge } from "@/components/ui/card";
+import { date, referralStatusLabel, toneFor } from "@/modules/format";
 import { BlockedBanner, StandingPanel, getStanding } from "@/modules/standing/standing";
 
 export const metadata: Metadata = { title: "Partner dashboard" };
@@ -19,14 +21,22 @@ export default async function PartnerDashboard({ searchParams }: { searchParams:
   const org = access.organizations[0]!;
   const approved = org.status === "approved" && org.can_refer;
   const supabase = await createClient();
-  const [{ data: refs }, { data: rank }, { count: services }, { count: unread }, standing] = await Promise.all([
+  const [{ data: refs }, { data: rank }, { data: turnedDown }, { count: unread }, standing] = await Promise.all([
     supabase.rpc("my_referrals", { p_org: org.id }),
     supabase.rpc("my_ranking", { p_org: org.id }),
-    supabase.from("organization_services").select("org_id", { count: "exact", head: true }).eq("org_id", org.id).eq("kind", "not_offered"),
+    supabase.from("organization_services").select("service_categories(name)").eq("org_id", org.id).eq("kind", "not_offered"),
     supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null).eq("for_admins", false),
     getStanding(org.id),
   ]);
-  const referrals = (refs ?? []) as { status: string; provider_name: string | null }[];
+  const referrals = (refs ?? []) as { id: string; number: number; service: string; city: string; status: string; created_at: string; provider_name: string | null }[];
+  const declinedNames = (turnedDown ?? [])
+    .map((r) => {
+      const c = r.service_categories as { name: string } | { name: string }[] | null;
+      return Array.isArray(c) ? c[0]?.name : c?.name;
+    })
+    .filter((n): n is string => Boolean(n));
+  const services = declinedNames.length;
+  const inProgress = referrals.filter((r) => !["closed", "rejected"].includes(r.status)).length;
   const qualified = referrals.filter((r) => ["qualified", "matching", "assigned", "closed"].includes(r.status)).length;
   const withProvider = referrals.filter((r) => r.provider_name).length;
   const partnerRank = (rank as { partner?: { level: string; score: number | null } | null } | null)?.partner;
@@ -51,7 +61,6 @@ export default async function PartnerDashboard({ searchParams }: { searchParams:
       {sp.blocked ? <FormMessage>That area opens after BookedUp approves your business.</FormMessage> : null}
       <ReviewNotice status={org.status} />
       {standing ? <BlockedBanner s={standing} area="partner" /> : null}
-      {standing ? <StandingPanel s={standing} /> : null}
       {unread ? (
         <Card className="flex flex-wrap items-center justify-between gap-2 p-4 text-sm">
           <span>You have {unread} unread {unread === 1 ? "notification" : "notifications"}.</span>
@@ -60,13 +69,63 @@ export default async function PartnerDashboard({ searchParams }: { searchParams:
       ) : null}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Referrals sent" value={referrals.length} />
-        <StatCard label="Qualified" value={qualified} />
-        <StatCard label="Sent to a provider" value={withProvider} />
-        <StatCard label="Partner level" value={partnerRank?.score != null ? partnerRank.level : "—"} hint={partnerRank?.score != null ? `Score ${partnerRank.score}` : "After 3 referrals"} />
+        <StatCard label="Qualified" value={qualified} hint="Checked and authorized by BookedUp" />
+        <StatCard label="Homeowners connected" value={withProvider} hint="Sent to a matching provider" />
+        <StatCard label="In progress" value={inProgress} />
       </div>
       {approved ? <ReferralLinkCard orgId={org.id} /> : null}
+      <Card className="grid gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg">Your referrals</h2>
+          <Link href="/partner/referrals" className="text-sm font-semibold text-primary hover:underline">
+            See all
+          </Link>
+        </div>
+        {!referrals.length ? (
+          <p className="m-0 text-sm text-muted">
+            No referrals yet. When a customer asks for something you don&apos;t do, send it here and follow every step.
+          </p>
+        ) : (
+          <ul className="grid gap-0 p-0">
+            {referrals.slice(0, 5).map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2.5 text-sm last:border-0">
+                <span className="grid">
+                  <span className="font-semibold">
+                    #{r.number} · {r.service}
+                  </span>
+                  <span className="text-xs text-muted">
+                    {r.city} · {date(r.created_at)}
+                    {r.provider_name ? ` · Sent to ${r.provider_name}` : ""}
+                  </span>
+                </span>
+                <Badge tone={toneFor(r.status)}>{referralStatusLabel[r.status] ?? r.status}</Badge>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      <Card className="grid gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg">Requests you usually turn down</h2>
+          <Link href="/partner/business" className="text-sm font-semibold text-primary hover:underline">
+            Edit
+          </Link>
+        </div>
+        {declinedNames.length ? (
+          <div className="flex flex-wrap gap-2">
+            {declinedNames.map((n) => (
+              <Badge key={n} tone="purple">
+                {n}
+              </Badge>
+            ))}
+          </div>
+        ) : (
+          <p className="m-0 text-sm text-muted">List them so you remember what to refer — these are your opportunities to help customers.</p>
+        )}
+      </Card>
+      {standing ? <StandingPanel s={standing} /> : null}
       <section className="grid gap-3">
-        <h2 className="text-lg font-semibold">Getting started</h2>
+        <h2 className="text-lg">Getting started</h2>
         <Checklist
           items={[
             { done: true, label: "Create your account and business" },
@@ -76,6 +135,16 @@ export default async function PartnerDashboard({ searchParams }: { searchParams:
           ]}
         />
       </section>
+      <p className="m-0 text-sm text-muted">
+        Partner level: <span className="font-semibold text-foreground">{partnerRank?.score != null ? `${partnerRank.level} · score ${partnerRank.score}` : "after 3 referrals"}</span> ·{" "}
+        <Link href="/partner/ranking" className="text-primary hover:underline">
+          Ranking
+        </Link>{" "}
+        ·{" "}
+        <Link href="/partner/network" className="text-primary hover:underline">
+          Find Partners
+        </Link>
+      </p>
     </>
   );
 }

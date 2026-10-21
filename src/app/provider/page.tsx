@@ -9,6 +9,8 @@ import { Checklist, ReviewNotice } from "@/modules/shared/checklist";
 import { BlockedBanner, StandingPanel, getStanding } from "@/modules/standing/standing";
 import { MatchingNote } from "@/modules/shared/matching";
 import { ConnectionRequests } from "@/modules/network/connection-requests";
+import { ProviderJourney, type Stage } from "@/modules/standing/stage";
+import { GrowthBlock, type GrowthProgress } from "@/modules/growth/progress";
 
 export const metadata: Metadata = { title: "Provider dashboard" };
 
@@ -19,13 +21,15 @@ export default async function ProviderDashboard({ searchParams }: { searchParams
   const access = await requireUser("/provider");
   const org = access.organizations[0]!;
   const supabase = await createClient();
-  const [{ data: opps }, { data: rel }, { count: docs }, { count: areas }, standing] = await Promise.all([
+  const [{ data: opps }, { data: rel }, { count: docs }, { count: areas }, standing, { data: programs }] = await Promise.all([
     supabase.rpc("list_my_opportunities_v2", { p_org: org.id }),
     supabase.rpc("provider_reliability", { p_org: org.id }),
     supabase.from("professional_documents").select("id", { count: "exact", head: true }).eq("org_id", org.id),
     supabase.from("organization_service_areas").select("org_id", { count: "exact", head: true }).eq("org_id", org.id),
     getStanding(org.id),
+    supabase.rpc("my_growth_program", { p_org: org.id }),
   ]);
+  const program = ((programs ?? []) as GrowthProgress[]).find((p) => ["active", "continuation_required"].includes(p.status));
   const list = (opps ?? []) as { status: string }[];
   const r = (rel ?? {}) as Rel;
   const fresh = list.filter((o) => o.status === "offered").length;
@@ -45,6 +49,7 @@ export default async function ProviderDashboard({ searchParams }: { searchParams
         </Card>
       ) : null}
       {standing ? <BlockedBanner s={standing} area="provider" /> : null}
+      {program ? <GrowthBlock p={program} /> : standing?.stage ? <ProviderJourney stage={standing.stage as Stage} /> : null}
       {standing ? <StandingPanel s={standing} /> : null}
       <ConnectionRequests orgId={org.id} canManage={org.role !== "member"} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

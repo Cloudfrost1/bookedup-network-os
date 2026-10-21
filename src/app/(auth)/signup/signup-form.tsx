@@ -6,10 +6,11 @@ import { signUp, type FormState } from "@/modules/auth/actions";
 import { Field, FormMessage, Input } from "@/components/ui/form";
 import { SubmitButton } from "@/components/ui/submit-button";
 
-export function SignupForm() {
+export function SignupForm({ intent = "partner" }: { intent?: "partner" | "provider" }) {
   const [state, action] = useActionState<FormState, FormData>(signUp, {});
   return (
     <form action={action} className="grid gap-4" noValidate>
+      <input type="hidden" name="intent" value={intent} />
       <FormMessage>{state.error}</FormMessage>
       <Field id="fullName" label="Full name">
         <Input id="fullName" name="fullName" autoComplete="name" required defaultValue={state.fields?.fullName} />

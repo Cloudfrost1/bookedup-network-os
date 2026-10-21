@@ -52,6 +52,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <Link href="/services">Services &amp; Coverage</Link>
             <Link href="/directory">Partner Directory</Link>
             <Link href="/signup">Join the Network</Link>
+            <Link href="/signup?as=provider">Apply as a Service Provider</Link>
+            <Link href="/growth">BookedUp Growth</Link>
           </nav>
           <nav className="grid content-start gap-2 text-sm" aria-label="Legal">
             <span className="pub-flow-label">Legal</span>

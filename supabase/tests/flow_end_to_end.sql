@@ -151,6 +151,8 @@ end $$;
 
 -- Growth counts the qualified delivery exactly once; scores and analytics compute
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-0000000000ad"}', true);
+-- since 20261021170000 a Growth delivery counts only after BookedUp validates it
+update public.growth_deliveries set validation = 'qualified' where assignment_id = (select v::uuid from t where k='asg');
 do $$ declare n int; j jsonb; begin
   select delivered into n from public.growth_contract_progress where provider_org_id = (select v::uuid from t where k='orgB');
   if n <> 1 then raise exception 'FAIL: growth delivered %', n; end if;

@@ -50,6 +50,8 @@ select public.admin_set_org_status((select v::uuid from t where k='A'), 'approve
 select public.admin_set_capability((select v::uuid from t where k='A'), 'refer', 'approved');
 select public.admin_set_org_status((select v::uuid from t where k='B'), 'approved');
 select public.admin_set_capability((select v::uuid from t where k='B'), 'receive', 'approved');
+-- since 20261021170000 a verified provider needs Growth, a complimentary opportunity or contingency status to receive
+select public.admin_set_provider_track((select v::uuid from t where k='B'), 'overflow');
 do $$ declare d record; begin
   for d in select id from public.professional_documents where org_id = (select v::uuid from t where k='B') loop
     perform public.admin_review_document(d.id, 'verified', 'checked');

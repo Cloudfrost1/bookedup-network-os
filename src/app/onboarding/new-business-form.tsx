@@ -12,9 +12,21 @@ import { Select } from "@/components/ui/inputs";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 const modes = [
-  { value: "refer", label: "Refer projects", hint: "Partner / anchor: send customers you can't serve to trusted providers" },
-  { value: "receive", label: "Receive projects", hint: "Provider: get qualified projects that fit your capacity" },
-  { value: "both", label: "Both", hint: "Refer and receive — you get both areas" },
+  {
+    value: "refer",
+    label: "Refer projects",
+    hint: "Join the network for free. Refer projects outside your scope and track every introduction.",
+  },
+  {
+    value: "receive",
+    label: "Receive projects",
+    hint: "Apply as a service provider. Complete verification and capacity information to be considered for compatible opportunities. Approval does not guarantee project volume.",
+  },
+  {
+    value: "both",
+    label: "Both",
+    hint: "Use the network for free to refer, and complete a separate provider qualification to be considered for projects.",
+  },
 ];
 
 const list = (v?: string) => (v ? v.split(",").filter(Boolean) : []);
@@ -40,10 +52,10 @@ function Consent({ name, checked, required, children }: { name: string; checked?
   );
 }
 
-export function NewBusinessForm({ categories, regions }: { categories: Category[]; regions: Region[] }) {
+export function NewBusinessForm({ categories, regions, defaultMode = "" }: { categories: Category[]; regions: Region[]; defaultMode?: string }) {
   const [state, action] = useActionState<FormState, FormData>(createOrganization, {});
   const f = state.fields ?? {};
-  const [mode, setMode] = useState(f.mode ?? "");
+  const [mode, setMode] = useState(f.mode ?? defaultMode);
   const refers = mode === "refer" || mode === "both";
   return (
     <div className="grid max-w-3xl gap-6">

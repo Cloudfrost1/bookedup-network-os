@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Inbox, Send } from "lucide-react";
+import { ArrowRight, Hammer, Inbox, Send, Share2 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: { absolute: "BookedUp Network · Free Local Referral Network · Orlando, FL" },
@@ -98,6 +98,32 @@ export default function HomePage() {
         </div>
       </section>
 
+
+      {/* two ways in: refer for free, or apply to receive */}
+      <section id="join" className="pub-sec wrap">
+        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
+          <article className="pub-card grid content-start gap-4">
+            <span className="pub-icon">
+              <Share2 aria-hidden className="size-5" />
+            </span>
+            <span className="pub-flow-label !text-[var(--accent)]">FOR BUSINESSES THAT GET OUT-OF-SCOPE REQUESTS</span>
+            <h3 className="text-[24px]">Turn projects you can&apos;t serve into trusted introductions.</h3>
+            <Cta>Join the Network — Free</Cta>
+          </article>
+          <article className="pub-card grid content-start gap-4">
+            <span className="pub-icon">
+              <Hammer aria-hidden className="size-5" />
+            </span>
+            <span className="pub-flow-label !text-[var(--accent)]">FOR REMODELING COMPANIES THAT WANT TO GROW</span>
+            <h3 className="text-[24px]">Looking for qualified estimate requests?</h3>
+            <p className="m-0 text-[15px] text-[var(--ink-soft)]">Free application and verification. Approval does not guarantee project volume.</p>
+            <Cta href="/signup?as=provider" ghost>
+              Apply as a Service Provider
+            </Cta>
+          </article>
+        </div>
+      </section>
+
       {/* 03 · example */}
       <section id="example" className="pub-sec wrap">
         <div className="pub-dark mx-auto grid max-w-4xl gap-5 px-6 py-10 sm:px-12 sm:py-14">
@@ -131,6 +157,21 @@ export default function HomePage() {
             <span className="pub-softtag">No guaranteed lead volume.</span>
           </div>
           <p className="pub-note m-0">BookedUp also offers separate optional paid growth services.</p>
+        </div>
+      </section>
+
+
+      {/* Growth (no price on the network homepage) */}
+      <section id="growth" className="pub-sec wrap">
+        <div className="pub-dark mx-auto grid max-w-4xl gap-4 px-6 py-10 sm:px-12">
+          <span className="pub-flow-label">BOOKEDUP GROWTH</span>
+          <h2 className="text-[28px] sm:text-[36px]">Need a more predictable pipeline?</h2>
+          <p className="m-0 max-w-2xl text-[17px] text-[rgba(247,244,254,.85)]">
+            BookedUp Growth combines qualified estimate requests with the digital infrastructure your company needs to convert them.
+          </p>
+          <Link href="/growth" className="pub-btn justify-self-start">
+            Learn about BookedUp Growth <ArrowRight aria-hidden className="size-4" />
+          </Link>
         </div>
       </section>
 

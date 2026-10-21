@@ -1,13 +1,15 @@
 import { Badge } from "@/components/ui/card";
 import type { OrgAccess } from "@/modules/auth/session";
 import type { Standing } from "@/modules/standing/standing";
+import { stageLabel, stageTone } from "@/modules/standing/stage";
 
 /** Sidebar card: membership and the one status that matters in this area, never a bare "Approved". */
 export function OrgCard({ org, env, standing }: { org: OrgAccess; env: "partner" | "provider"; standing: Standing | null }) {
   const member = org.status === "approved" ? "Member · Approved" : org.status === "pending_review" ? "Member · Under review" : `Member · ${org.status[0].toUpperCase()}${org.status.slice(1)}`;
   let area: { text: string; tone: "success" | "warning" | "danger" } | null = null;
   if (standing && env === "provider" && standing.receive !== null) {
-    area = standing.eligible_to_receive ? { text: "Receiving projects", tone: "success" } : { text: "Not receiving projects", tone: "danger" };
+    const st = stageTone(standing.stage);
+    area = { text: stageLabel(standing.stage), tone: st === "purple" || st === "success" ? "success" : st === "danger" ? "danger" : "warning" };
   } else if (standing && env === "partner" && standing.refer !== null) {
     area =
       standing.referral_partner === "active"

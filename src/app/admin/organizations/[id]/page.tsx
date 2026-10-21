@@ -9,12 +9,13 @@ import { Flash } from "@/components/ui/flash";
 import { Field, Input } from "@/components/ui/form";
 import { Checkbox, Select, Textarea } from "@/components/ui/inputs";
 import { createClient } from "@/lib/supabase/server";
-import { deleteOrganization, restoreOrganization, reviewDocument, saveFollowup, updateOrganizationAdmin } from "@/modules/admin/actions";
+import { deleteOrganization, restoreOrganization, reviewDocument, saveFollowup, setProviderTrack, updateOrganizationAdmin } from "@/modules/admin/actions";
 import { requireAdmin } from "@/modules/auth/session";
 import { ReliabilityView, type Reliability } from "@/modules/provider/reliability-view";
 import { docKindLabel } from "@/modules/provider/labels";
 import { DocsChecklist } from "@/modules/provider/docs-status";
 import { BlockedBanner, StandingPanel, getStanding } from "@/modules/standing/standing";
+import { stageLabel, stageTone } from "@/modules/standing/stage";
 import { date, dateTime, money, toneFor } from "@/modules/format";
 
 const CONSENT_LABELS = [
@@ -46,7 +47,7 @@ export default async function OrganizationAdminPage({
   const { data: org } = await supabase
     .from("organizations")
     .select(
-      "id, name, email, phone, website, city, state, zip, status, verification, deleted_at, referral_code, out_of_scope_last_30d, created_at, description, organization_capabilities(capability, status), organization_followups(last_contact_at, next_followup_at, outcome, notes)",
+      "id, name, email, phone, website, city, state, zip, status, verification, deleted_at, referral_code, out_of_scope_last_30d, created_at, description, provider_track, organization_capabilities(capability, status), organization_followups(last_contact_at, next_followup_at, outcome, notes)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -203,6 +204,32 @@ export default async function OrganizationAdminPage({
           <StandingPanel s={standing} title="Standing" />
           <BlockedBanner s={standing} area="provider" admin />
         </div>
+      ) : null}
+      {standing && standing.receive !== null ? (
+        <Card className="grid gap-3 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base">Provider commercial status</h2>
+            <Badge tone={stageTone(standing.stage) === "purple" ? "purple" : stageTone(standing.stage)}>{stageLabel(standing.stage)}</Badge>
+          </div>
+          <p className="m-0 text-muted">
+            Verified providers don&apos;t receive a continuous flow. They receive projects only through an active Growth contract, one complimentary
+            opportunity, or as a contingency provider when no Growth client can serve the project.
+          </p>
+          <form action={setProviderTrack} className="flex flex-wrap items-end gap-2">
+            <input type="hidden" name="orgId" value={org.id} />
+            <Field id="track" label="Track set by BookedUp">
+              <Select id="track" name="track" defaultValue={org.provider_track ?? ""} className="min-w-64">
+                <option value="">None (verified, no delivery)</option>
+                <option value="trial">Complimentary opportunity (one)</option>
+                <option value="overflow">Contingency provider</option>
+                <option value="paused">Paused</option>
+                <option value="rejected">Rejected as provider</option>
+              </Select>
+            </Field>
+            <Button size="sm">Save</Button>
+          </form>
+          <p className="m-0 text-xs text-muted">Growth contracts are created in Growth Clients and take priority over this track.</p>
+        </Card>
       ) : null}
       <Card className="grid gap-3 text-sm">
         <h2 className="text-base font-semibold">Consents</h2>

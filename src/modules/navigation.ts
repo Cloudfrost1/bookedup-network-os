@@ -45,6 +45,7 @@ export const providerNav: NavItem[] = [
   { href: "/provider", label: "Dashboard", icon: LayoutDashboard },
   { href: "/provider/opportunities", label: "Opportunities", icon: Inbox, needs: "receive" },
   { href: "/provider/capacity", label: "Capacity & Documents", icon: Gauge },
+  { href: "/provider/growth", label: "BookedUp Growth", icon: Rocket },
   { href: "/provider/reliability", label: "Reliability", icon: ShieldCheck },
   { href: "/provider/business", label: "My Business", icon: Building2 },
   { href: "/provider/notifications", label: "Notifications", icon: Bell },

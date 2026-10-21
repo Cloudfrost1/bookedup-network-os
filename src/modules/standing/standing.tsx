@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AlertTriangle, CheckCircle2, CircleDashed, XCircle } from "lucide-react";
 import { Badge, Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
+import { stageLabel, stageTone } from "./stage";
 
 /** Mirrors public.org_standing(): four separate answers instead of one ambiguous "Approved". */
 export type Standing = {
@@ -10,7 +11,12 @@ export type Standing = {
   receive: "requested" | "approved" | "revoked" | null;
   referral_partner: "active" | "pending" | "inactive" | "not_requested";
   provider_verification: "complete" | "incomplete" | "not_requested";
+  /** Verification and capacity are in order (operational). */
+  operational_ready: boolean;
+  /** Operational AND commercially allowed (Growth, complimentary opportunity or contingency). */
   eligible_to_receive: boolean;
+  stage: string;
+  delivery_kind: "growth" | "trial" | "overflow" | null;
   blockers: string[];
   license: string;
   insurance: string;
@@ -112,8 +118,20 @@ export function StandingPanel({ s, title = "Your status in the network" }: { s: 
             <Row
               label="Eligible to receive projects"
               value={s.eligible_to_receive ? "Yes" : "No"}
-              tone={s.eligible_to_receive ? "success" : "danger"}
+              tone={s.eligible_to_receive ? "success" : s.operational_ready ? "warning" : "danger"}
+              note={
+                s.eligible_to_receive
+                  ? s.delivery_kind === "trial"
+                    ? "One complimentary opportunity, when a compatible project appears."
+                    : s.delivery_kind === "overflow"
+                      ? "Contingency: when no Growth client can serve the project."
+                      : "Through your BookedUp Growth program."
+                  : s.operational_ready
+                    ? "Verified. Ongoing projects come through BookedUp Growth; verified providers may get one complimentary opportunity."
+                    : "Resolve the items in the red box first."
+              }
             />
+            <Row label="Provider status" value={stageLabel(s.stage)} tone={stageTone(s.stage) === "purple" ? "success" : (stageTone(s.stage) as Tone)} />
           </>
         ) : null}
       </ul>
@@ -138,7 +156,7 @@ export function BlockedBanner({ s, area, admin = false }: { s: Standing; area: "
       </Card>
     );
   }
-  if (s.eligible_to_receive || s.receive === null) return null;
+  if (s.operational_ready || s.receive === null) return null;
   const items = s.blockers.filter((b) => b !== "receive_not_requested").map((b) => ({ code: b, ...(BLOCKERS[b] ?? { text: b }) }));
   return (
     <Card className="grid gap-3 border-danger/30 bg-danger/5 p-4 text-sm" role="status">

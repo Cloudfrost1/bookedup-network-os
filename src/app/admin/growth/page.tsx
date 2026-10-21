@@ -40,7 +40,15 @@ export default async function GrowthPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageHeader title="Growth Clients" description="Service contracts: qualified quote requests delivered inside a 90-day window." />
+      <PageHeader
+        title="Growth Clients"
+        description="Service contracts: qualified quote requests delivered inside a 90-day window. Only validated requests count."
+        action={
+          <Button asChild variant="secondary">
+            <Link href="/admin/growth/requests">Growth Review requests</Link>
+          </Button>
+        }
+      />
       <Flash sp={sp} />
       <Card className="text-sm">
         <p>

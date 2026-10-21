@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BLOCKERS } from "@/modules/standing/standing";
+import { stageLabel } from "@/modules/standing/stage";
 import { MatchingNote } from "@/modules/shared/matching";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -29,6 +30,9 @@ const CHECKS: [string, string][] = [
 
 type Suggestion = {
   blockers: string[];
+  stage: string;
+  delivery_kind: "growth" | "trial" | "overflow" | null;
+  priority: number;
   org_id: string;
   name: string;
   city: string | null;
@@ -96,7 +100,7 @@ export default async function AdminReferralPage({
   const { data: signed } = photoPaths.length ? await supabase.storage.from("referral-photos").createSignedUrls(photoPaths, 3600) : { data: [] };
   const photoUrls = (signed ?? []).map((x) => x.signedUrl).filter((u): u is string => Boolean(u));
   const canMatch = ["qualified", "matching"].includes(r.status);
-  const { data: sugg } = canMatch ? await supabase.rpc("admin_match_suggestions_v3", { p_referral: id }) : { data: [] };
+  const { data: sugg } = canMatch ? await supabase.rpc("admin_match_suggestions_v4", { p_referral: id }) : { data: [] };
   const suggestions = (sugg ?? []) as Suggestion[];
   const consent = consents?.[0];
   const checklist = (r.checklist ?? {}) as Record<string, boolean>;
@@ -223,6 +227,10 @@ export default async function AdminReferralPage({
             <Card className="grid gap-3">
               <h2 className="font-semibold">Send to one provider</h2>
               <MatchingNote />
+              <p className="m-0 text-xs text-muted">
+                Order: compatibility first, then Growth clients with remaining requests, other Growth clients, complimentary opportunities and contingency
+                providers. Never send an unsuitable project just to fill a target.
+              </p>
               {!suggestions.length ? (
                 <p className="text-sm text-muted">
                   No approved provider offers this service yet. Recruit one, then come back. The referral stays in &quot;To match&quot;.
@@ -236,6 +244,15 @@ export default async function AdminReferralPage({
                     <span className="grid gap-1">
                       <span className="font-medium">{s.name}</span>
                       <span className="flex flex-wrap gap-1">
+                        {s.delivery_kind === "growth" ? (
+                          <Badge tone="success">Growth{s.growth_remaining != null ? ` · ${s.growth_remaining} to go` : ""}</Badge>
+                        ) : s.delivery_kind === "trial" ? (
+                          <Badge tone="purple">Complimentary opportunity</Badge>
+                        ) : s.delivery_kind === "overflow" ? (
+                          <Badge>Contingency</Badge>
+                        ) : (
+                          <Badge tone="danger">{stageLabel(s.stage)}</Badge>
+                        )}
                         {s.suggested_by_referrer ? <Badge tone="purple">Partner&apos;s pick</Badge> : null}
                         {s.covers_city ? <Badge tone="success">Serves {r.city}</Badge> : <Badge>Outside listed cities</Badge>}
                         {s.accepting_new_work === false ? (
@@ -254,15 +271,17 @@ export default async function AdminReferralPage({
                         {s.trusted ? <Badge tone="purple">Trusted</Badge> : null}
                         <Badge>{s.open_assignments} open</Badge>
                         {s.provider_score != null ? <Badge>Score {s.provider_score}</Badge> : null}
-                        {s.growth_remaining != null ? <Badge tone="warning">Growth: {s.growth_remaining} to go</Badge> : null}
                       </span>
                     </span>
-                    {s.blockers.length ? (
+                    {s.blockers.length || !s.delivery_kind ? (
                       <span className="grid w-full gap-1 rounded-md bg-danger/5 px-2 py-1.5 text-xs text-danger sm:w-auto sm:max-w-xs">
-                        <span className="font-semibold">Not eligible to receive</span>
+                        <span className="font-semibold">Can&apos;t be sent this project</span>
                         {s.blockers.map((b) => (
                           <span key={b}>· {BLOCKERS[b]?.text ?? b}</span>
                         ))}
+                        {!s.blockers.length && !s.delivery_kind ? (
+                          <span>· {stageLabel(s.stage)}: no Growth contract, complimentary opportunity or contingency status. Set it in the organization page.</span>
+                        ) : null}
                       </span>
                     ) : (
                       <Button size="sm">Send</Button>

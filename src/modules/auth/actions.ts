@@ -64,7 +64,12 @@ export async function signUp(_: FormState, formData: FormData): Promise<FormStat
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      data: { full_name: parsed.data.fullName, terms_accepted_at: new Date().toISOString(), terms_version: "draft-2026-10" },
+      data: {
+        full_name: parsed.data.fullName,
+        terms_accepted_at: new Date().toISOString(),
+        terms_version: "draft-2026-10",
+        signup_intent: formData.get("intent") === "provider" ? "provider" : "partner",
+      },
       emailRedirectTo: `${await siteUrl()}/auth/callback?next=/app`,
     },
   });
