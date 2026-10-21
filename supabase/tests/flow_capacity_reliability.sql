@@ -24,12 +24,13 @@ insert into t select 'B', public.create_organization_v2('Bath Pro', (select v::u
 -- provider fills capacity and uploads documents
 insert into public.provider_capacity (org_id, weekly_capacity, min_project_value, max_project_value, lead_time_days)
 values ((select v::uuid from t where k='B'), 3, 5000, 40000, 10);
-insert into public.professional_documents (org_id, kind, number, expires_on) values
-  ((select v::uuid from t where k='B'), 'contractor_license', 'CBC123', current_date + 300),
-  ((select v::uuid from t where k='B'), 'general_liability', 'POL-9', current_date + 200);
+insert into public.professional_documents (org_id, kind, number, issuer, expires_on, file_path) values
+  ((select v::uuid from t where k='B'), 'contractor_license', 'CBC123', 'Florida DBPR', current_date + 300, (select v from t where k='B') || '/lic.pdf'),
+  ((select v::uuid from t where k='B'), 'general_liability', 'POL-9', 'Acme Insurance', current_date + 200, (select v from t where k='B') || '/gl.pdf');
 do $$ begin
   begin
-    insert into public.professional_documents (org_id, kind, number, status) values ((select v::uuid from t where k='B'), 'other', 'x', 'verified');
+    insert into public.professional_documents (org_id, kind, number, issuer, expires_on, file_path, status)
+      values ((select v::uuid from t where k='B'), 'other', 'x', 'y', current_date + 30, 'b/x.pdf', 'verified');
     raise exception 'FAIL: provider self-verified a document';
   exception when insufficient_privilege then null; end;
   if (public.provider_reliability((select v::uuid from t where k='B')) ->> 'docs_verified')::boolean then raise exception 'FAIL: docs verified before review'; end if;

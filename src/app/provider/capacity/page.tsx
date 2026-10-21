@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MATCHING_SENTENCE } from "@/modules/shared/matching";
 import { PageHeader } from "@/components/layout/shell";
 import { Badge, Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
@@ -15,10 +16,17 @@ type Doc = { id: string; kind: string; number: string | null; issuer: string | n
 export default async function CapacityPage() {
   const { org } = await requireOrg("/provider/capacity");
   const supabase = await createClient();
-  const [{ data: cap }, { data: docs }] = await Promise.all([
+  const [{ data: cap }, { data: docs }, { data: svc }] = await Promise.all([
     supabase.from("provider_capacity").select("*").eq("org_id", org.id).maybeSingle(),
     supabase.from("professional_documents").select("id, kind, number, issuer, expires_on, status, review_note, created_at").eq("org_id", org.id).order("created_at", { ascending: false }),
+    supabase.from("organization_services").select("service_categories(name)").eq("org_id", org.id).eq("kind", "offered"),
   ]);
+  const services = (svc ?? [])
+    .map((r) => {
+      const c = r.service_categories as { name: string } | { name: string }[] | null;
+      return Array.isArray(c) ? c[0]?.name : c?.name;
+    })
+    .filter((n): n is string => Boolean(n));
   const confirmed = cap?.confirmed_at as string | undefined;
   const stale = !confirmed || Date.now() - new Date(confirmed).getTime() > 30 * 864e5;
   const today = new Date().toISOString().slice(0, 10);
@@ -27,7 +35,7 @@ export default async function CapacityPage() {
     <>
       <PageHeader
         title="Capacity & Documents"
-        description="BookedUp sends a project only when it fits your capacity, project size and documents. Keep this current."
+        description={MATCHING_SENTENCE}
       />
       <Card className="grid gap-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -72,7 +80,7 @@ export default async function CapacityPage() {
         ) : (
           <p className="text-sm text-muted">No documents yet.</p>
         )}
-        <DocumentForm orgId={org.id} />
+        <DocumentForm orgId={org.id} services={services} />
       </Card>
     </>
   );

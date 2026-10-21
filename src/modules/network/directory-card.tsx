@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BadgeCheck, Globe, Mail, Phone } from "lucide-react";
+import { BadgeCheck, Globe, Lock, Mail, Phone } from "lucide-react";
 import { Badge, Card } from "@/components/ui/card";
 
 export type DirectoryRow = {
@@ -19,7 +19,18 @@ export type DirectoryRow = {
   description: string | null;
 };
 
-export function DirectoryCard({ d, href, children }: { d: DirectoryRow; href?: string; children?: React.ReactNode }) {
+export function DirectoryCard({
+  d,
+  href,
+  children,
+  locked = false,
+}: {
+  d: DirectoryRow;
+  href?: string;
+  children?: React.ReactNode;
+  /** Member view without an accepted connection: say why contact details are hidden. */
+  locked?: boolean;
+}) {
   return (
     <Card className="grid content-start gap-3">
       <div className="grid gap-1">
@@ -50,6 +61,12 @@ export function DirectoryCard({ d, href, children }: { d: DirectoryRow; href?: s
         </div>
       ) : null}
       {d.areas.length ? <p className="text-xs text-muted">Serves {d.areas.join(", ")}</p> : null}
+      {locked && !d.phone && !d.email ? (
+        <p className="m-0 flex items-start gap-2 rounded-lg bg-surface px-3 py-2 text-xs text-muted">
+          <Lock aria-hidden className="mt-0.5 size-3.5 shrink-0" />
+          Phone and e-mail unlock after this business accepts your connection, or when you work on a project together through BookedUp.
+        </p>
+      ) : null}
       {d.phone || d.email || d.website ? (
         <div className="grid gap-1 text-sm">
           {d.phone ? (

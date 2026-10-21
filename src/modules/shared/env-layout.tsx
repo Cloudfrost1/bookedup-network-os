@@ -5,6 +5,7 @@ import { OrgCard } from "@/components/layout/org-card";
 import { requireUser } from "@/modules/auth/session";
 import { environmentsFor, type Environment } from "@/modules/auth/environments";
 import { partnerNav, providerNav, visibleItems } from "@/modules/navigation";
+import { getStanding } from "@/modules/standing/standing";
 
 /** Shared guard + shell for the two business environments. */
 export async function BusinessEnvLayout({ env, children }: { env: "partner" | "provider"; children: React.ReactNode }) {
@@ -21,10 +22,11 @@ export async function BusinessEnvLayout({ env, children }: { env: "partner" | "p
   });
   const available = (["partner", "provider", "admin"] as Environment[]).filter((x) => e[x]);
   if (!available.includes(env)) available.unshift(env);
+  const standing = await getStanding(org.id);
   const context = (
     <div className="grid gap-3">
       <EnvSwitcher current={env} available={available} />
-      <OrgCard org={org} role={env === "partner" ? "Referral partner" : "Service provider"} />
+      <OrgCard org={org} env={env} standing={standing} />
     </div>
   );
   return (

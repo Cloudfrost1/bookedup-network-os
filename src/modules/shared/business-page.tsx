@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/modules/auth/session";
 import { getCatalog } from "@/modules/network/catalog";
-import { docsStatus, type DocRow } from "@/modules/provider/docs-status";
+import { DocsChecklist, type DocRow } from "@/modules/provider/docs-status";
+import { StandingPanel, getStanding } from "@/modules/standing/standing";
+import { date, money } from "@/modules/format";
 import { BusinessForm } from "./business-form";
 import { ServicesForm, TeamForm } from "./more-forms";
 
@@ -24,7 +26,9 @@ export default async function BusinessPage() {
   }
 
   const supabase = await createClient();
-  const [{ data: org }, { data: services }, { data: areas }, { data: team }, catalog, { data: docRows }] = await Promise.all([
+  const refers = current.can_refer || current.requested.includes("refer");
+  const receives = current.can_receive || current.requested.includes("receive");
+  const [{ data: org }, { data: services }, { data: areas }, { data: team }, catalog, { data: docRows }, { data: cap }, standing] = await Promise.all([
     supabase
       .from("organizations")
       .select("id, name, email, phone, website, state, city, zip, description, status, verification, referral_code, category_id, public_profile, available_for_referrals")
@@ -35,8 +39,9 @@ export default async function BusinessPage() {
     supabase.rpc("org_team", { p_org: current.id }),
     getCatalog(),
     supabase.from("professional_documents").select("kind, status, expires_on").eq("org_id", current.id),
+    supabase.from("provider_capacity").select("accepting_new_work, weekly_capacity, min_project_value, max_project_value, lead_time_days, confirmed_at").eq("org_id", current.id).maybeSingle(),
+    getStanding(current.id),
   ]);
-  const docsVerified = docsStatus((docRows ?? []) as DocRow[]).verified;
   if (!org) return <EmptyState title="Business not found" />;
 
   const canEdit = current.role === "owner" || current.role === "manager";
@@ -45,12 +50,21 @@ export default async function BusinessPage() {
 
   return (
     <>
-      <PageHeader title="My Business" description="Your profile, services, service areas and team." />
+      <PageHeader
+        title="My Business"
+        description={
+          refers && receives
+            ? "You refer and receive projects: all settings apply to you."
+            : refers
+              ? "You refer projects: services, requests you turn down and directory visibility."
+              : "You receive projects: services, cities, availability, capacity and documents."
+        }
+      />
       <div className="flex flex-wrap gap-2">
-        <Badge tone={org.status === "approved" ? "success" : "warning"}>{org.status === "pending_review" ? "Pending Review" : org.status}</Badge>
-        <Badge tone={docsVerified ? "purple" : "neutral"}>{docsVerified ? "Verified documents" : "Documents not verified"}</Badge>
         <Badge>Your role: {current.role}</Badge>
+        <Badge tone="purple">{refers && receives ? "Refers and receives" : refers ? "Refers projects" : "Receives projects"}</Badge>
       </div>
+      {standing ? <StandingPanel s={standing} title="Status" /> : null}
       {canEdit ? (
         <>
           <BusinessForm org={org} />
@@ -66,7 +80,36 @@ export default async function BusinessPage() {
               publicProfile: org.public_profile,
               available: org.available_for_referrals,
             }}
+            refers={refers}
+            receives={receives}
           />
+          {refers ? (
+            <Card className="flex flex-wrap items-center justify-between gap-3">
+              <span className="grid gap-0.5">
+                <span className="font-semibold">Send referrals</span>
+                <span className="text-sm text-muted">Refer a customer you can&apos;t serve, or share your referral link.</span>
+              </span>
+              <Button asChild size="sm">
+                <Link href="/partner/referrals/new">Send a referral</Link>
+              </Button>
+            </Card>
+          ) : null}
+          {receives ? (
+            <Card className="grid gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold">Capacity and documents</h2>
+                <Button asChild size="sm" variant="secondary">
+                  <Link href="/provider/capacity">Update</Link>
+                </Button>
+              </div>
+              <p className="text-sm">
+                {cap
+                  ? `${cap.accepting_new_work ? "Taking new projects" : "Paused"} · ${cap.weekly_capacity ?? "—"} per week · ${money(cap.min_project_value)} – ${money(cap.max_project_value)} · starts in ${cap.lead_time_days ?? "—"} days · confirmed ${date(cap.confirmed_at)}`
+                  : "Capacity not set yet."}
+              </p>
+              <DocsChecklist docs={(docRows ?? []) as DocRow[]} />
+            </Card>
+          ) : null}
         </>
       ) : (
         <Card className="text-sm text-muted">Only owners and managers can edit the business profile.</Card>

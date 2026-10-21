@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { firstName, requireUser } from "@/modules/auth/session";
 import { Checklist, ReviewNotice } from "@/modules/shared/checklist";
 import { ReferralLinkCard } from "./referrals/referral-link";
+import { BlockedBanner, StandingPanel, getStanding } from "@/modules/standing/standing";
 
 export const metadata: Metadata = { title: "Partner dashboard" };
 
@@ -18,11 +19,12 @@ export default async function PartnerDashboard({ searchParams }: { searchParams:
   const org = access.organizations[0]!;
   const approved = org.status === "approved" && org.can_refer;
   const supabase = await createClient();
-  const [{ data: refs }, { data: rank }, { count: services }, { count: unread }] = await Promise.all([
+  const [{ data: refs }, { data: rank }, { count: services }, { count: unread }, standing] = await Promise.all([
     supabase.rpc("my_referrals", { p_org: org.id }),
     supabase.rpc("my_ranking", { p_org: org.id }),
     supabase.from("organization_services").select("org_id", { count: "exact", head: true }).eq("org_id", org.id).eq("kind", "not_offered"),
     supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null).eq("for_admins", false),
+    getStanding(org.id),
   ]);
   const referrals = (refs ?? []) as { status: string; provider_name: string | null }[];
   const qualified = referrals.filter((r) => ["qualified", "matching", "assigned", "closed"].includes(r.status)).length;
@@ -48,6 +50,8 @@ export default async function PartnerDashboard({ searchParams }: { searchParams:
       {sp.password ? <FormMessage tone="success">Password updated.</FormMessage> : null}
       {sp.blocked ? <FormMessage>That area opens after BookedUp approves your business.</FormMessage> : null}
       <ReviewNotice status={org.status} />
+      {standing ? <BlockedBanner s={standing} area="partner" /> : null}
+      {standing ? <StandingPanel s={standing} /> : null}
       {unread ? (
         <Card className="flex flex-wrap items-center justify-between gap-2 p-4 text-sm">
           <span>You have {unread} unread {unread === 1 ? "notification" : "notifications"}.</span>

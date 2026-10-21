@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MATCHING_SENTENCE } from "@/modules/shared/matching";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/shell";
 import { Badge, EmptyState } from "@/components/ui/card";
@@ -39,7 +40,7 @@ export default async function OpportunitiesPage() {
       />
       {!rows.length ? (
         <EmptyState title="No opportunities yet">
-          When BookedUp qualifies a project that matches your services and cities, it shows up here. Keep your services and service areas up to date in My Business.
+          When BookedUp qualifies a project that fits your business, it shows up here. {MATCHING_SENTENCE}
         </EmptyState>
       ) : (
         <Table head={["#", "Service", "Location", "Timeline", "Budget", "Status", "Your estimate", "Received"]}>

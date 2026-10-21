@@ -14,6 +14,7 @@ import { requireAdmin } from "@/modules/auth/session";
 import { ReliabilityView, type Reliability } from "@/modules/provider/reliability-view";
 import { docKindLabel } from "@/modules/provider/labels";
 import { DocsChecklist } from "@/modules/provider/docs-status";
+import { BlockedBanner, StandingPanel, getStanding } from "@/modules/standing/standing";
 import { date, dateTime, money, toneFor } from "@/modules/format";
 
 const CONSENT_LABELS = [
@@ -66,6 +67,7 @@ export default async function OrganizationAdminPage({
   const caps = (org.organization_capabilities ?? []) as { capability: string; status: string }[];
   const isProvider = caps.some((c) => c.capability === "receive");
   type Doc = { id: string; kind: string; number: string | null; issuer: string | null; expires_on: string | null; status: string; file_path: string | null; review_note: string | null };
+  const standing = await getStanding(id);
   const { data: consentRows } = await supabase
     .from("organization_consents")
     .select("kind, granted, version, created_at")
@@ -196,6 +198,12 @@ export default async function OrganizationAdminPage({
           </Card>
         </div>
       </div>
+      {standing ? (
+        <div className="grid gap-3 lg:grid-cols-2">
+          <StandingPanel s={standing} title="Standing" />
+          <BlockedBanner s={standing} area="provider" admin />
+        </div>
+      ) : null}
       <Card className="grid gap-3 text-sm">
         <h2 className="text-base font-semibold">Consents</h2>
         {consents.size ? (

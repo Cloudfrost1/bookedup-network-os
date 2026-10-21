@@ -40,8 +40,11 @@ export default async function PartnersPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <PageHeader title="Find Partners" description="Approved home-service businesses in the BookedUp network." />
-      {!approved ? <Card className="text-sm text-muted">Contact details and connections unlock once BookedUp approves your business.</Card> : null}
+      <PageHeader
+        title="Find Partners"
+        description="Approved home-service businesses in the BookedUp network. Contact details appear after a connection is accepted."
+      />
+      {!approved ? <Card className="text-sm text-muted">Connections unlock once BookedUp approves your business.</Card> : null}
 
       {incoming.length ? (
         <Card className="grid gap-3">
@@ -72,7 +75,7 @@ export default async function PartnersPage({ searchParams }: { searchParams: Pro
           {rows.map((d) => {
             const c = connectionWith(d.id);
             return (
-              <DirectoryCard key={d.id} d={d}>
+              <DirectoryCard key={d.id} d={d} locked={approved}>
                 {approved ? (
                   <div className="flex flex-wrap gap-2 border-t border-border pt-3">
                     {c ? (

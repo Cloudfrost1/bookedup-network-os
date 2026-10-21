@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { BLOCKERS } from "@/modules/standing/standing";
+import { MatchingNote } from "@/modules/shared/matching";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft } from "lucide-react";
@@ -26,6 +28,7 @@ const CHECKS: [string, string][] = [
 ];
 
 type Suggestion = {
+  blockers: string[];
   org_id: string;
   name: string;
   city: string | null;
@@ -93,7 +96,7 @@ export default async function AdminReferralPage({
   const { data: signed } = photoPaths.length ? await supabase.storage.from("referral-photos").createSignedUrls(photoPaths, 3600) : { data: [] };
   const photoUrls = (signed ?? []).map((x) => x.signedUrl).filter((u): u is string => Boolean(u));
   const canMatch = ["qualified", "matching"].includes(r.status);
-  const { data: sugg } = canMatch ? await supabase.rpc("admin_match_suggestions_v2", { p_referral: id }) : { data: [] };
+  const { data: sugg } = canMatch ? await supabase.rpc("admin_match_suggestions_v3", { p_referral: id }) : { data: [] };
   const suggestions = (sugg ?? []) as Suggestion[];
   const consent = consents?.[0];
   const checklist = (r.checklist ?? {}) as Record<string, boolean>;
@@ -219,6 +222,7 @@ export default async function AdminReferralPage({
           {canMatch ? (
             <Card className="grid gap-3">
               <h2 className="font-semibold">Send to one provider</h2>
+              <MatchingNote />
               {!suggestions.length ? (
                 <p className="text-sm text-muted">
                   No approved provider offers this service yet. Recruit one, then come back. The referral stays in &quot;To match&quot;.
@@ -253,7 +257,16 @@ export default async function AdminReferralPage({
                         {s.growth_remaining != null ? <Badge tone="warning">Growth: {s.growth_remaining} to go</Badge> : null}
                       </span>
                     </span>
-                    <Button size="sm">Send</Button>
+                    {s.blockers.length ? (
+                      <span className="grid w-full gap-1 rounded-md bg-danger/5 px-2 py-1.5 text-xs text-danger sm:w-auto sm:max-w-xs">
+                        <span className="font-semibold">Not eligible to receive</span>
+                        {s.blockers.map((b) => (
+                          <span key={b}>· {BLOCKERS[b]?.text ?? b}</span>
+                        ))}
+                      </span>
+                    ) : (
+                      <Button size="sm">Send</Button>
+                    )}
                   </form>
                 ))
               )}

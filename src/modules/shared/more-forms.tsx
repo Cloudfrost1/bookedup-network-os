@@ -18,21 +18,35 @@ type Values = {
   available: boolean;
 };
 
-export function ServicesForm({ orgId, categories, regions, values }: { orgId: string; categories: Category[]; regions: Region[]; values: Values }) {
+export function ServicesForm({
+  orgId,
+  categories,
+  regions,
+  values,
+  refers,
+  receives,
+}: {
+  orgId: string;
+  categories: Category[];
+  regions: Region[];
+  values: Values;
+  refers: boolean;
+  receives: boolean;
+}) {
   const [state, action] = useActionState<FormState, FormData>(saveServices, {});
   return (
     <form action={action} className="grid gap-5 rounded-xl border border-border bg-background p-5 sm:p-6">
-      <h2 className="text-lg font-semibold">Services and service areas</h2>
+      <h2 className="text-lg font-semibold">{receives ? "Services and service areas" : "Services and referrals"}</h2>
       <input type="hidden" name="orgId" value={orgId} />
       <FormMessage>{state.error}</FormMessage>
       <FormMessage tone="success">{state.success}</FormMessage>
-      <ServicesFields categories={categories} regions={regions} values={values} />
+      <ServicesFields categories={categories} regions={regions} values={values} show={{ notOffered: refers, regions: receives }} />
       <div className="grid gap-2">
-        <Checkbox name="publicProfile" defaultChecked={values.publicProfile} label="Show my business in the public directory" />
-        <Checkbox name="available" defaultChecked={values.available} label="I'm available to receive new projects" />
+        {refers ? <Checkbox name="publicProfile" defaultChecked={values.publicProfile} label="Show my business in the public directory" /> : null}
+        {receives ? <Checkbox name="available" defaultChecked={values.available} label="I'm available to receive new projects" /> : null}
       </div>
       <SubmitButton pendingText="Saving…" className="justify-self-start">
-        Save services
+        Save
       </SubmitButton>
     </form>
   );

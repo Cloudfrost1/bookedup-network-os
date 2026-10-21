@@ -6,7 +6,9 @@ import { FormMessage } from "@/components/ui/form";
 import { createClient } from "@/lib/supabase/server";
 import { firstName, requireUser } from "@/modules/auth/session";
 import { Checklist, ReviewNotice } from "@/modules/shared/checklist";
-import { date } from "@/modules/format";
+import { BlockedBanner, StandingPanel, getStanding } from "@/modules/standing/standing";
+import { MatchingNote } from "@/modules/shared/matching";
+import { ConnectionRequests } from "@/modules/network/connection-requests";
 
 export const metadata: Metadata = { title: "Provider dashboard" };
 
@@ -17,11 +19,12 @@ export default async function ProviderDashboard({ searchParams }: { searchParams
   const access = await requireUser("/provider");
   const org = access.organizations[0]!;
   const supabase = await createClient();
-  const [{ data: opps }, { data: rel }, { count: docs }, { count: areas }] = await Promise.all([
+  const [{ data: opps }, { data: rel }, { count: docs }, { count: areas }, standing] = await Promise.all([
     supabase.rpc("list_my_opportunities_v2", { p_org: org.id }),
     supabase.rpc("provider_reliability", { p_org: org.id }),
     supabase.from("professional_documents").select("id", { count: "exact", head: true }).eq("org_id", org.id),
     supabase.from("organization_service_areas").select("org_id", { count: "exact", head: true }).eq("org_id", org.id),
+    getStanding(org.id),
   ]);
   const list = (opps ?? []) as { status: string }[];
   const r = (rel ?? {}) as Rel;
@@ -41,21 +44,20 @@ export default async function ProviderDashboard({ searchParams }: { searchParams
           <Link href="/provider/opportunities" className="font-medium text-primary hover:underline">Answer now</Link>
         </Card>
       ) : null}
-      {capacityStale ? (
-        <Card className="flex flex-wrap items-center justify-between gap-2 border-primary/30 bg-primary-soft/40 p-4 text-sm">
-          <span>
-            {r.capacity_confirmed_at ? `Capacity last confirmed ${date(r.capacity_confirmed_at)}.` : "You haven't told us your capacity yet."} BookedUp
-            only sends projects to providers with capacity confirmed in the last 30 days.
-          </span>
-          <Link href="/provider/capacity" className="font-medium text-primary hover:underline">Confirm capacity</Link>
-        </Card>
-      ) : null}
+      {standing ? <BlockedBanner s={standing} area="provider" /> : null}
+      {standing ? <StandingPanel s={standing} /> : null}
+      <ConnectionRequests orgId={org.id} canManage={org.role !== "member"} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="New opportunities" value={fresh} />
         <StatCard label="In progress" value={open} />
         <StatCard label="Median response" value={r.median_response_hours != null ? `${r.median_response_hours}h` : "—"} />
-        <StatCard label="Documents" value={r.docs_verified ? "Verified" : docs ? "In review" : "Missing"} />
+        <StatCard
+          label="Documents"
+          value={r.docs_verified ? "Verified" : standing && [standing.license, standing.insurance].includes("expired") ? "Expired" : docs ? "Incomplete" : "Missing"}
+          hint={r.docs_verified ? undefined : "License and insurance both verified"}
+        />
       </div>
+      <MatchingNote />
       <section className="grid gap-3">
         <h2 className="text-lg font-semibold">Getting started</h2>
         <Checklist
@@ -63,7 +65,7 @@ export default async function ProviderDashboard({ searchParams }: { searchParams
             { done: true, label: "Create your account and business" },
             { done: Boolean(areas), label: "Add your services and the cities you serve (My Business)" },
             { done: !capacityStale, label: "Confirm your capacity (availability, project size, lead time)" },
-            { done: Boolean(docs), label: "Upload your license and insurance" },
+            { done: Boolean(r.docs_verified), label: "Get your license and insurance verified" },
             { done: org.status === "approved", label: "Get approved by BookedUp" },
           ]}
         />

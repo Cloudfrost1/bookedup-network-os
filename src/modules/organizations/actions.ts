@@ -86,19 +86,35 @@ export async function createOrganization(_: FormState, formData: FormData): Prom
   redirect("/app?created=1");
 }
 
-/** Replaces the services and service areas of a business (RLS: owners and managers only). */
+/** Replaces the services and service areas of a business (RLS: owners and managers only).
+ *  Only the blocks that apply to the business's role are changed: a business that only refers keeps its service areas
+ *  and availability as they are; a business that only receives keeps its turned-down list and directory setting. */
 export async function saveServices(_: FormState, formData: FormData): Promise<FormState> {
   const orgId = z.string().uuid().safeParse(formData.get("orgId"));
   if (!orgId.success) return { error: "Invalid business." };
+  const org = orgId.data;
+  const supabase = await createClient();
+
+  const [{ data: caps }, { data: current }, { data: currentAreas }, { data: orgRow }] = await Promise.all([
+    supabase.from("organization_capabilities").select("capability, status").eq("org_id", org),
+    supabase.from("organization_services").select("category_id, kind").eq("org_id", org),
+    supabase.from("organization_service_areas").select("region_id").eq("org_id", org),
+    supabase.from("organizations").select("public_profile, available_for_referrals").eq("id", org).maybeSingle(),
+  ]);
+  if (!orgRow) return { error: "You don't have permission to change this business." };
+  const refers = (caps ?? []).some((c) => c.capability === "refer" && c.status !== "revoked");
+  const receives = (caps ?? []).some((c) => c.capability === "receive" && c.status !== "revoked");
+
   const offered = uuidList(formData, "offered");
-  const notOffered = uuidList(formData, "notOffered").filter((id) => !offered.includes(id));
-  const regions = uuidList(formData, "regions");
+  const notOffered = refers
+    ? uuidList(formData, "notOffered").filter((id) => !offered.includes(id))
+    : (current ?? []).filter((r) => r.kind === "not_offered").map((r) => r.category_id as string).filter((id) => !offered.includes(id));
+  const regions = receives ? uuidList(formData, "regions") : (currentAreas ?? []).map((a) => a.region_id as string);
   if (!offered.length) return { error: "Choose at least one service you offer." };
-  if (!regions.length) return { error: "Choose at least one city you serve." };
+  if (refers && !notOffered.length) return { error: "Choose at least one request you usually turn down — these are the projects you can refer." };
+  if (receives && !regions.length) return { error: "Choose at least one city you serve." };
   const category = z.string().uuid().safeParse(formData.get("category"));
 
-  const supabase = await createClient();
-  const org = orgId.data;
   const steps = [
     await supabase.from("organization_services").delete().eq("org_id", org),
     await supabase.from("organization_services").insert([
@@ -106,19 +122,21 @@ export async function saveServices(_: FormState, formData: FormData): Promise<Fo
       ...notOffered.map((c) => ({ org_id: org, category_id: c, kind: "not_offered" })),
     ]),
     await supabase.from("organization_service_areas").delete().eq("org_id", org),
-    await supabase.from("organization_service_areas").insert(regions.map((r) => ({ org_id: org, region_id: r }))),
+    regions.length
+      ? await supabase.from("organization_service_areas").insert(regions.map((r) => ({ org_id: org, region_id: r })))
+      : { error: null },
     await supabase
       .from("organizations")
       .update({
         category_id: category.success && offered.includes(category.data) ? category.data : offered[0],
-        public_profile: formData.get("publicProfile") === "on",
-        available_for_referrals: formData.get("available") === "on",
+        public_profile: refers ? formData.get("publicProfile") === "on" : orgRow.public_profile,
+        available_for_referrals: receives ? formData.get("available") === "on" : orgRow.available_for_referrals,
       })
       .eq("id", org),
   ];
   if (steps.some((s) => s.error)) return { error: "You don't have permission to change this business." };
   revalidatePath("/", "layout");
-  return { success: "Services and service areas saved." };
+  return { success: "Services saved." };
 }
 
 export async function addTeamMember(_: FormState, formData: FormData): Promise<FormState> {

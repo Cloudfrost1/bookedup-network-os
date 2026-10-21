@@ -29,8 +29,8 @@ const keys = ["category", "city", "zip", "description", "timeline", "budget", "p
 const budgets = ["under_5k", "5k_15k", "15k_30k", "30k_60k", "60k_plus", "unknown"] as const;
 const properties = ["single_family", "townhouse", "condo", "multi_family", "commercial", "other"] as const;
 const scope = {
-  budget: z.enum(budgets, { error: "Choose the estimated budget." }),
-  propertyType: z.enum(properties).optional(),
+  budget: z.enum(budgets, { error: "Choose the estimated budget (or “Not sure yet”)." }),
+  propertyType: z.enum(properties, { error: "Choose the property type (or “Other”)." }),
   needs: z.string().trim().max(2000).optional(),
 };
 const photoTypes: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/heic": "heic" };
@@ -53,13 +53,13 @@ export async function submitReferral(_: FormState, formData: FormData): Promise<
       ...fields,
       orgId: formData.get("orgId"),
       provider: fields.provider || undefined,
-      propertyType: fields.propertyType || undefined,
       needs: fields.needs || undefined,
       attested: formData.get("attested"),
     });
   if (!parsed.success) return { error: parsed.error.issues[0].message, fields };
   const d = parsed.data;
-  if (!d.phone && !d.email) return { error: "Add the homeowner's phone or email.", fields };
+  if (!d.phone && !d.email) return { error: "Add the homeowner's phone or e-mail.", fields };
+  if (d.timeline === "asap" && !d.phone) return { error: "Urgent projects need the homeowner's phone number.", fields };
   const photos = formData.getAll("photos").filter((f): f is File => f instanceof File && f.size > 0);
   if (photos.length > 8) return { error: "Add up to 8 photos.", fields };
   if (photos.some((p) => !photoTypes[p.type])) return { error: "Photos must be JPG, PNG, WEBP or HEIC.", fields };
@@ -74,7 +74,7 @@ export async function submitReferral(_: FormState, formData: FormData): Promise<
     p_description: d.description,
     p_timeline: d.timeline,
     p_budget: d.budget,
-    p_property_type: d.propertyType ?? null,
+    p_property_type: d.propertyType,
     p_needs: d.needs ?? null,
     p_name: d.name,
     p_phone: d.phone,
@@ -107,7 +107,6 @@ export async function submitPublicReferral(_: FormState, formData: FormData): Pr
     })
     .safeParse({
       ...fields,
-      propertyType: fields.propertyType || undefined,
       needs: fields.needs || undefined,
       code: formData.get("code"),
       consentVersion: formData.get("consentVersion"),
@@ -115,7 +114,8 @@ export async function submitPublicReferral(_: FormState, formData: FormData): Pr
     });
   if (!parsed.success) return { error: parsed.error.issues[0].message, fields };
   const d = parsed.data;
-  if (!d.phone && !d.email) return { error: "Add a phone number or email so we can reach you.", fields };
+  if (!d.phone && !d.email) return { error: "Add a phone number or e-mail so we can reach you.", fields };
+  if (d.timeline === "asap" && !d.phone) return { error: "For urgent projects, add a phone number so we can reach you quickly.", fields };
 
   const h = await headers();
   const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || "unknown";
@@ -130,7 +130,7 @@ export async function submitPublicReferral(_: FormState, formData: FormData): Pr
     p_description: d.description,
     p_timeline: d.timeline,
     p_budget: d.budget,
-    p_property_type: d.propertyType ?? null,
+    p_property_type: d.propertyType,
     p_needs: d.needs ?? null,
     p_name: d.name,
     p_phone: d.phone,
@@ -225,7 +225,7 @@ export async function respondConnection(formData: FormData) {
   const status = z.enum(["accepted", "declined"]).parse(formData.get("status"));
   const supabase = await createClient();
   await supabase.rpc("respond_connection", { p_connection: c, p_status: status });
-  revalidatePath("/partner/network");
+  revalidatePath("/", "layout");
 }
 
 export async function markNotificationsRead() {

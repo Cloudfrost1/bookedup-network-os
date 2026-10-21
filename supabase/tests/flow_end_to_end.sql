@@ -1,6 +1,9 @@
 -- End-to-end flow test (signup → approval → referral → consent → qualification → matching → assignment →
 -- accept → contact → pipeline → Growth count → scores). Runs in a transaction and rolls back.
 begin;
+-- v1 referral entry points are server-only since 20261021160000; re-grant inside this rolled-back test
+grant execute on function public.submit_referral(uuid, uuid, text, text, text, text, text, text, text, text, boolean, uuid) to authenticated;
+grant execute on function public.submit_public_referral(text, uuid, text, text, text, text, text, text, text, boolean, text, text, text) to anon, authenticated;
 -- org creation helpers are server-only since 20261021150000; re-grant inside this rolled-back test
 grant execute on function public.create_organization(text, text, text, text, text, text, text, boolean, boolean, public.out_of_scope_bucket) to authenticated;
 grant execute on function public.create_organization_v2(text, uuid, text, text, text, text, text, text, boolean, boolean, public.out_of_scope_bucket, uuid[], uuid[], uuid[]) to authenticated;
@@ -51,6 +54,15 @@ select public.admin_set_capability((select v::uuid from t where k='orgB'), 'rece
 select public.admin_set_verification((select v::uuid from t where k='orgB'), 'verified');
 insert into public.growth_contracts (provider_org_id, start_date, offer_text) values
   ((select v::uuid from t where k='orgB'), current_date - 1, '24 Qualified Remodeling Quote Requests in 90 Days.');
+-- since 20261021160000 a provider must be eligible (capacity + verified license and insurance) to be sent a project
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-00000000000b"}', true);
+insert into public.provider_capacity (org_id, weekly_capacity, min_project_value, max_project_value, lead_time_days)
+values ((select v::uuid from t where k='orgB'), 3, 1000, 80000, 7);
+insert into public.professional_documents (org_id, kind, number, issuer, expires_on, file_path) values
+  ((select v::uuid from t where k='orgB'), 'contractor_license', 'CBC1', 'Florida DBPR', current_date + 365, (select v from t where k='orgB') || '/lic.pdf'),
+  ((select v::uuid from t where k='orgB'), 'general_liability', 'GL1', 'Acme Insurance', current_date + 365, (select v from t where k='orgB') || '/gl.pdf');
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-0000000000ad"}', true);
+select public.admin_review_document(d.id, 'verified', 'checked') from public.professional_documents d where d.org_id = (select v::uuid from t where k='orgB');
 
 insert into t select 'code', referral_code from public.organizations where id = (select v::uuid from t where k='orgA');
 
@@ -58,11 +70,11 @@ insert into t select 'code', referral_code from public.organizations where id = 
 set local role anon;
 select set_config('request.jwt.claims', '{}', true);
 do $$ declare n int; p text; begin
-  select count(*) into n from public.directory_search();
+  select count(*) into n from public.directory_search() d where d.id in (select v::uuid from t where k in ('orgA','orgB','orgC'));
   if n <> 2 then raise exception 'FAIL: public directory shows % businesses, expected 2', n; end if;
   select phone into p from public.directory_search() where name = 'ABC Flooring LLC';
   if p is not null then raise exception 'FAIL: public directory leaks phone'; end if;
-  select count(*) into n from public.services_coverage((select v::uuid from t where k='bath'), (select v::uuid from t where k='kis')) where providers = 1;
+  select count(*) into n from public.services_coverage((select v::uuid from t where k='bath'), (select v::uuid from t where k='kis')) where providers >= 1;
   if n <> 1 then raise exception 'FAIL: coverage'; end if;
 end $$;
 

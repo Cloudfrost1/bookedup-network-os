@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MATCHING_SENTENCE } from "@/modules/shared/matching";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "How it works" };
@@ -21,8 +22,8 @@ export default function HowItWorksPage() {
       <section className="grid gap-2">
         <h2 className="text-xl font-semibold">For businesses that receive projects</h2>
         <p className="text-muted">
-          Approved providers receive projects that match their services and service areas. Customer contact details are shared
-          only after you accept the project and the customer has authorized it.
+          {MATCHING_SENTENCE} Only providers with verified documents and capacity confirmed in the last 30 days receive projects.
+          Customer contact details are shared only after you accept the project and the customer has authorized it.
         </p>
       </section>
       <section className="grid gap-2">
