@@ -16,6 +16,7 @@ import { docKindLabel } from "@/modules/provider/labels";
 import { DocsChecklist } from "@/modules/provider/docs-status";
 import { BlockedBanner, StandingPanel, getStanding } from "@/modules/standing/standing";
 import { stageLabel, stageTone } from "@/modules/standing/stage";
+import { GrowthAdminControls } from "@/modules/growth/admin-controls";
 import { date, dateTime, money, toneFor } from "@/modules/format";
 
 const CONSENT_LABELS = [
@@ -228,9 +229,10 @@ export default async function OrganizationAdminPage({
             </Field>
             <Button size="sm">Save</Button>
           </form>
-          <p className="m-0 text-xs text-muted">Growth contracts are created in Growth Clients and take priority over this track.</p>
+          <p className="m-0 text-xs text-muted">An active BookedUp Growth program takes priority over this track.</p>
         </Card>
       ) : null}
+      {standing && standing.receive !== null ? <GrowthAdminControls orgId={org.id} returnTo={`/admin/organizations/${org.id}`} /> : null}
       <Card className="grid gap-3 text-sm">
         <h2 className="text-base font-semibold">Consents</h2>
         {consents.size ? (

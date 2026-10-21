@@ -38,6 +38,11 @@ export function toneFor(status: string): "neutral" | "purple" | "success" | "war
 
 export function date(value: string | null | undefined) {
   if (!value) return "—";
+  // Calendar dates (YYYY-MM-DD: contract start, deadline, document expiry) have no time zone — format them as-is,
+  // otherwise midnight UTC shows as the previous day in Orlando.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(`${value}T12:00:00Z`));
+  }
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" }).format(
     new Date(value),
   );

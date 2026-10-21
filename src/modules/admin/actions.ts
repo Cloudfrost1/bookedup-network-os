@@ -172,13 +172,20 @@ export async function recomputeScores() {
   redirect(back("/admin/rankings", error ? "Could not recalculate." : "Scores recalculated.", !error));
 }
 
+const adminReturn = (v: FormDataEntryValue | null, fallback: string) => {
+  const s = String(v ?? "");
+  return /^\/admin\/[a-z0-9/_-]*$/i.test(s) ? s : fallback;
+};
+
+/** Activates BookedUp Growth for a provider (from Growth Clients or from the organization page). */
 export async function createGrowthContract(formData: FormData) {
   const access = await requireAdmin();
+  const ret = adminReturn(formData.get("returnTo"), "/admin/growth");
   const provider = uuid.safeParse(formData.get("providerId"));
   const start = String(formData.get("start") ?? "");
   const target = Number(formData.get("target") ?? 24);
-  if (!provider.success || !/^\d{4}-\d{2}-\d{2}$/.test(start) || !(target > 0 && target <= 500))
-    redirect(back("/admin/growth", "Choose a provider, a start date and a target."));
+  if (!provider.success || !/^\d{4}-\d{2}-\d{2}$/.test(start) || !(Number.isInteger(target) && target > 0 && target <= 500))
+    redirect(back(ret, "Choose a provider, a start date and a target (1–500)."));
   const supabase = await createClient();
   const { data: settings } = await supabase.from("network_settings").select("growth_offer_text").limit(1).single();
   const { error } = await supabase.from("growth_contracts").insert({
@@ -190,7 +197,44 @@ export async function createGrowthContract(formData: FormData) {
     created_by: access.userId,
   });
   revalidatePath("/admin", "layout");
-  redirect(back("/admin/growth", error ? "Could not create the contract." : "Contract created.", !error));
+  revalidatePath("/provider", "layout");
+  redirect(
+    back(
+      ret,
+      error ? (error.code === "23505" ? "This provider already has a running Growth program." : "Could not activate Growth.") : "BookedUp Growth activated.",
+      !error,
+    ),
+  );
+}
+
+/** Manual target change (e.g. replacement requests agreed with the client). */
+export async function setGrowthTarget(formData: FormData) {
+  await requireAdmin();
+  const id = uuid.parse(formData.get("contractId"));
+  const ret = adminReturn(formData.get("returnTo"), `/admin/growth/${id}`);
+  const target = Number(formData.get("target"));
+  if (!(Number.isInteger(target) && target > 0 && target <= 500)) redirect(back(ret, "The target must be a whole number from 1 to 500."));
+  const supabase = await createClient();
+  const { error } = await supabase.from("growth_contracts").update({ target }).eq("id", id);
+  revalidatePath("/admin", "layout");
+  revalidatePath("/provider", "layout");
+  redirect(back(ret, error ? "Could not update the target." : "Target updated.", !error));
+}
+
+/** Manual credit or debit to the counter, always with a reason (audited). */
+export async function adjustGrowthCount(formData: FormData) {
+  const access = await requireAdmin();
+  const id = uuid.parse(formData.get("contractId"));
+  const ret = adminReturn(formData.get("returnTo"), `/admin/growth/${id}`);
+  const delta = Number(formData.get("delta"));
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 500);
+  if (!(Number.isInteger(delta) && delta !== 0 && Math.abs(delta) <= 100)) redirect(back(ret, "Use a whole number between -100 and 100 (not 0)."));
+  if (reason.length < 3) redirect(back(ret, "Write the reason for the manual adjustment."));
+  const supabase = await createClient();
+  const { error } = await supabase.from("growth_adjustments").insert({ contract_id: id, delta, reason, created_by: access.userId });
+  revalidatePath("/admin", "layout");
+  revalidatePath("/provider", "layout");
+  redirect(back(ret, error ? "Could not adjust the counter." : `Counter adjusted by ${delta > 0 ? "+" : ""}${delta}.`, !error));
 }
 
 export async function setGrowthStatus(formData: FormData) {

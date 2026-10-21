@@ -10,6 +10,7 @@ import { Table, Td } from "@/components/ui/inputs";
 import { createClient } from "@/lib/supabase/server";
 import { setDeliveryValidation, setGrowthStatus } from "@/modules/admin/actions";
 import { HEALTH, VALIDATION } from "@/modules/growth/progress";
+import { GrowthAdminControls } from "@/modules/growth/admin-controls";
 import { Select } from "@/components/ui/inputs";
 import { assignmentStatusLabel, date, dateTime, toneFor } from "@/modules/format";
 
@@ -65,6 +66,9 @@ export default async function GrowthContractPage({
         <StatCard label="Dispute / replacement" value={`${p.under_dispute} / ${p.replacement_required}`} />
       </div>
       <p className="m-0 text-sm text-muted">Only deliveries validated as qualified count toward the target.</p>
+      {["active", "continuation_required"].includes(p.status) ? (
+        <GrowthAdminControls orgId={p.provider_org_id} returnTo={`/admin/growth/${id}`} showLink={false} />
+      ) : null}
       <form action={setGrowthStatus} className="flex flex-wrap gap-2">
         <input type="hidden" name="contractId" value={id} />
         {["active", "completed", "continuation_required", "cancelled"].map((s) => (

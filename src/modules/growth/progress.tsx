@@ -16,7 +16,27 @@ export type GrowthProgress = {
   expected_per_month: number;
   current_per_month: number;
   health: string;
+  manual_adjustment?: number;
 };
+
+/** The two numbers that matter: delivered counts up, remaining counts down, until the target is reached. */
+export function GrowthCounter({ p }: { p: GrowthProgress }) {
+  const done = p.delivered >= p.target;
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-1 rounded-2xl border-2 border-line bg-background p-4">
+        <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-muted">Delivered ↑</span>
+        <span className="text-5xl font-extrabold tabular-nums text-success">{p.delivered}</span>
+        <span className="text-xs text-muted">of {p.target} qualified requests</span>
+      </div>
+      <div className="grid gap-1 rounded-2xl border-2 border-line bg-background p-4">
+        <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-muted">{done ? "Target reached" : "Remaining ↓"}</span>
+        <span className={`text-5xl font-extrabold tabular-nums ${done ? "text-success" : "text-primary"}`}>{done ? "✓" : p.remaining}</span>
+        <span className="text-xs text-muted">{done ? `${p.delivered} of ${p.target}` : `${p.days_left} days left`}</span>
+      </div>
+    </div>
+  );
+}
 
 export const HEALTH: Record<string, { label: string; tone: "success" | "warning" | "danger" | "neutral" }> = {
   on_track: { label: "On track", tone: "success" },
@@ -54,11 +74,8 @@ export function GrowthBlock({ p }: { p: GrowthProgress }) {
         <span className="font-mono text-[12px] font-bold uppercase tracking-[2px] text-[#a78bfa]">BookedUp Growth</span>
         <Badge tone={h.tone}>{h.label}</Badge>
       </div>
+      <GrowthCounter p={p} />
       <div className="grid gap-1">
-        <span className="text-4xl font-extrabold tabular-nums">
-          {p.delivered} <span className="text-xl text-muted">/ {p.target}</span>
-        </span>
-        <span className="text-sm text-muted">qualified requests delivered</span>
         <div className="mt-1 h-3 overflow-hidden rounded-full border-2 border-line bg-subtle" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
           <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
         </div>
@@ -74,7 +91,8 @@ export function GrowthBlock({ p }: { p: GrowthProgress }) {
         <Line k="Under dispute / replacement" v={`${p.under_dispute} / ${p.replacement_required}`} />
       </div>
       <p className="m-0 text-xs text-muted">
-        Only requests BookedUp validates as qualified count toward the target — not every opportunity sent.
+        Each qualified request sent to you counts automatically. BookedUp may adjust the count (disputes, replacements) — every adjustment is
+        recorded with a reason.
       </p>
     </Card>
   );
