@@ -9,16 +9,24 @@ import { cn } from "@/lib/utils";
 
 type LinkItem = { href: string; label: string; icon: React.ReactNode };
 
-function isActive(path: string, href: string) {
+function matches(path: string, href: string) {
   return ["/partner", "/provider", "/admin"].includes(href) ? path === href : path === href || path.startsWith(href + "/");
+}
+
+/** Only one item is active: the most specific match (e.g. /partner/referrals/new → "Send Referral", not also "My Referrals"). */
+function activeHref(path: string, links: LinkItem[]) {
+  return links
+    .filter((l) => matches(path, l.href))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 }
 
 export function NavLinks({ links, onNavigate }: { links: LinkItem[]; onNavigate?: () => void }) {
   const path = usePathname();
+  const current = activeHref(path, links);
   return (
     <nav className="grid flex-1 content-start gap-1 overflow-y-auto px-3 py-1" aria-label="Sections">
       {links.map((l) => {
-        const active = isActive(path, l.href);
+        const active = l.href === current;
         return (
           <Link
             key={l.href}
